@@ -1,6 +1,0 @@
-2026/01/15-09:45:35.015 d195 Reusing MANIFEST /home/a2/Desktop/gem/agents/browser_data/Default/Local Storage/leveldb/MANIFEST-000001
-2026/01/15-09:45:35.018 d195 Recovering log #119
-2026/01/15-09:45:35.018 d195 Reusing old log /home/a2/Desktop/gem/agents/browser_data/Default/Local Storage/leveldb/000119.log 
-2026/01/15-09:46:35.020 d19b Level-0 table #123: started
-2026/01/15-09:46:35.028 d19b Level-0 table #123: 62775 bytes OK
-2026/01/15-09:46:35.032 d19b Delete type=0 #119
