@@ -1,398 +1,615 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 
-const currentTime = new Date().toLocaleString('en-US', {
-  timeZone: 'Asia/Seoul',
-  dateStyle: 'full',
-  timeStyle: 'short'
+const currentTime = new Date().toLocaleString("en-US", {
+  timeZone: "Asia/Seoul",
+  dateStyle: "full",
+  timeStyle: "short",
 });
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <meta name="viewport" content="width=device-width" />
-  <meta name="generator" content={Astro.generator} />
-  <meta name="description" content="Root Control Panel - Mission Control Management" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <title>Root Control | Mission Control</title>
-  <script is:inline>
-    // Theme Init (Blocking to prevent FOUC)
-    const savedTheme = localStorage.getItem('theme');
-    const root = document.documentElement;
-    if (savedTheme === 'light') {
-      root.setAttribute('data-theme', 'light');
-    }
-  </script>
-</head>
-<body>
-  <div class="container">
-    <!-- Header -->
-    <header style="padding: 2rem 0; border-bottom: 1px solid var(--border-primary);">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-        <div>
-          <h1 style="margin-bottom: 0.25rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-            🔐 Root Control Panel
-          </h1>
-          <p style="margin: 0; color: var(--text-tertiary);">{currentTime}</p>
-        </div>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-          <button id="theme-toggle" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" aria-label="Toggle theme">
-            <span class="icon-sun" style="display: none;">☀️</span>
-            <span class="icon-moon">🌙</span>
-          </button>
-          <a href="/" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
-            ← Back to Dashboard
-          </a>
-        </div>
-      </div>
-    </header>
-
-    <!-- Main Content -->
-    <main style="padding: 2rem 0;">
-      <!-- Active Projects Management -->
-      <section style="margin-bottom: 3rem;" class="fade-in">
-        <div class="card">
-          <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span>🚀</span> Active Projects Management
-          </h2>
-          <!-- Add Project -->
-          <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;">
-            <h3 style="margin-bottom: 1rem;">Add New Project</h3>
-            <form id="add-project-form" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-              <input type="text" id="new-project-name" placeholder="Project Name" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" required />
-              <input type="text" id="new-project-desc" placeholder="Description" style="flex: 2; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" required />
-              <select id="new-project-status" style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                <option value="Active">Active</option>
-                <option value="On Hold">On Hold</option>
-                <option value="Completed">Completed</option>
-                <option value="Planning">Planning</option>
-              </select>
-              <input type="text" id="new-project-tags" placeholder="Tags (comma separated)" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
-              <button type="submit" class="btn btn-primary">✚ Add Project</button>
-            </form>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta
+      name="description"
+      content="Root Control Panel - Mission Control Management"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Root Control | Mission Control</title>
+    <script is:inline>
+      // Theme Init (Blocking to prevent FOUC)
+      const savedTheme = localStorage.getItem("theme");
+      const root = document.documentElement;
+      // Default to light if no preference or if preference is light
+      if (savedTheme === "light" || !savedTheme) {
+        root.setAttribute("data-theme", "light");
+        if (!savedTheme) localStorage.setItem("theme", "light");
+      } else {
+        root.setAttribute("data-theme", "dark");
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header
+        style="padding: 2rem 0; border-bottom: 1px solid var(--border-primary);"
+      >
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;"
+        >
+          <div>
+            <h1
+              style="margin-bottom: 0.25rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"
+            >
+              🔐 Root Control Panel
+            </h1>
+            <p style="margin: 0; color: var(--text-tertiary);">{currentTime}</p>
           </div>
-          <!-- Projects List Container -->
-          <div id="projects-list" style="display: grid; gap: 1rem;"></div>
-        </div>
-      </section>
-
-      <section style="margin-bottom: 3rem;" class="fade-in">
-        <div class="card">
-          <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span>🤖</span> System Management
-          </h2>
-           <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;">
-            <h3 style="margin-bottom: 1rem;">Add New System</h3>
-             <form id="add-system-form" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-              <input type="text" id="new-system-name" placeholder="System Name" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" required />
-              <select id="new-system-status" style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                <option value="operational">Operational</option>
-                <option value="degraded">Degraded</option>
-                <option value="offline">Offline</option>
-                <option value="maintenance">Maintenance</option>
-              </select>
-              <input type="text" id="new-system-uptime" placeholder="Uptime %" style="width: 120px; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
-              <button type="submit" class="btn btn-primary">✚ Add System</button>
-            </form>
-          </div>
-          <div id="systems-list" style="display: grid; gap: 1rem;"></div>
-        </div>
-      </section>
-
-       <section style="margin-bottom: 3rem;" class="fade-in">
-        <div class="card">
-          <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span>📊</span> Metrics Management
-          </h2>
-          <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;">
-            <h3 style="margin-bottom: 1rem;">Add New Metric</h3>
-            <form id="add-metric-form" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-              <input type="text" id="new-metric-label" placeholder="Label" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" required />
-              <input type="text" id="new-metric-value" placeholder="Value" style="width: 120px; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" required />
-              <input type="text" id="new-metric-trend" placeholder="Trend" style="width: 100px; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
-              <select id="new-metric-color" style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                <option value="success">Success</option>
-                <option value="info">Info</option>
-                <option value="warning">Warning</option>
-                <option value="error">Error</option>
-              </select>
-              <button type="submit" class="btn btn-primary">✚ Add Metric</button>
-            </form>
-          </div>
-          <div id="metrics-list" style="display: grid; gap: 1rem;"></div>
-        </div>
-      </section>
-
-      <section class="fade-in">
-        <div class="card">
-          <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span>📡</span> Activity Log Management
-          </h2>
-          <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;">
-            <h3 style="margin-bottom: 1rem;">Add New Activity</h3>
-            <form id="add-activity-form" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-               <input type="text" id="new-activity-agent" placeholder="Agent" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" required />
-              <input type="text" id="new-activity-action" placeholder="Action" style="flex: 2; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);" required />
-              <select id="new-activity-type" style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                <option value="info">Info</option>
-                <option value="success">Success</option>
-                <option value="warning">Warning</option>
-                <option value="error">Error</option>
-              </select>
-              <button type="submit" class="btn btn-primary">✚ Add Activity</button>
-            </form>
-          </div>
-          <div id="activities-list" style="display: grid; gap: 1rem;"></div>
-        </div>
-      </section>
-      
-      <!-- Save & Export Section -->
-      <section style="margin-top: 3rem;" class="fade-in">
-        <div class="card" style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-tertiary)); border-color: var(--accent-primary);">
-          <h3 style="margin-bottom: 1rem;">Data Management</h3>
-           <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
-             <div style="color: var(--text-secondary); font-size: 0.9em;">
-               All changes are automatically saved to backend.
-             </div>
-           </div>
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <button class="btn btn-primary" id="save-btn">💾 Force Save to Server</button>
-            <button class="btn btn-secondary" id="reset-btn">🔄 Reset to Defaults</button>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <button
+              id="theme-toggle"
+              class="btn btn-secondary"
+              style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"
+              aria-label="Toggle theme"
+            >
+              <span class="icon-sun">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2"
+                  ></path><path d="M12 21v2"></path><path
+                    d="M4.22 4.22l1.42 1.42"></path><path
+                    d="M18.36 18.36l1.42 1.42"></path><path d="M1 12h2"
+                  ></path><path d="M21 12h2"></path><path
+                    d="M4.22 19.78l1.42-1.42"></path><path
+                    d="M18.36 5.64l1.42-1.42"></path></svg
+                >
+              </span>
+              <span class="icon-moon" style="display: none;">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                  ></path></svg
+                >
+              </span>
+            </button>
+            <a href="/" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+              ← Back to Dashboard
+            </a>
           </div>
         </div>
-      </section>
-    </main>
-  </div>
+      </header>
 
-<script>
-    // State
-    let state = {
+      <!-- Main Content -->
+      <main style="padding: 2rem 0;">
+        <!-- Active Projects Management -->
+        <section style="margin-bottom: 3rem;" class="fade-in">
+          <div class="card">
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"
+            >
+              <span>🚀</span> Active Projects Management
+            </h2>
+            <!-- Add Project -->
+            <div
+              style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;"
+            >
+              <h3 style="margin-bottom: 1rem;">Add New Project</h3>
+              <form
+                id="add-project-form"
+                style="display: flex; gap: 1rem; flex-wrap: wrap;"
+              >
+                <input
+                  type="text"
+                  id="new-project-name"
+                  placeholder="Project Name"
+                  style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                  required
+                />
+                <input
+                  type="text"
+                  id="new-project-desc"
+                  placeholder="Description"
+                  style="flex: 2; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                  required
+                />
+                <select
+                  id="new-project-status"
+                  style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                >
+                  <option value="Active">Active</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Planning">Planning</option>
+                </select>
+                <input
+                  type="text"
+                  id="new-project-tags"
+                  placeholder="Tags (comma separated)"
+                  style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                />
+                <button type="submit" class="btn btn-primary"
+                  >✚ Add Project</button
+                >
+              </form>
+            </div>
+            <!-- Projects List Container -->
+            <div id="projects-list" style="display: grid; gap: 1rem;"></div>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 3rem;" class="fade-in">
+          <div class="card">
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"
+            >
+              <span>🤖</span> System Management
+            </h2>
+            <div
+              style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;"
+            >
+              <h3 style="margin-bottom: 1rem;">Add New System</h3>
+              <form
+                id="add-system-form"
+                style="display: flex; gap: 1rem; flex-wrap: wrap;"
+              >
+                <input
+                  type="text"
+                  id="new-system-name"
+                  placeholder="System Name"
+                  style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                  required
+                />
+                <select
+                  id="new-system-status"
+                  style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                >
+                  <option value="operational">Operational</option>
+                  <option value="degraded">Degraded</option>
+                  <option value="offline">Offline</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+                <input
+                  type="text"
+                  id="new-system-uptime"
+                  placeholder="Uptime %"
+                  style="width: 120px; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                />
+                <button type="submit" class="btn btn-primary"
+                  >✚ Add System</button
+                >
+              </form>
+            </div>
+            <div id="systems-list" style="display: grid; gap: 1rem;"></div>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 3rem;" class="fade-in">
+          <div class="card">
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"
+            >
+              <span>📊</span> Metrics Management
+            </h2>
+            <div
+              style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;"
+            >
+              <h3 style="margin-bottom: 1rem;">Add New Metric</h3>
+              <form
+                id="add-metric-form"
+                style="display: flex; gap: 1rem; flex-wrap: wrap;"
+              >
+                <input
+                  type="text"
+                  id="new-metric-label"
+                  placeholder="Label"
+                  style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                  required
+                />
+                <input
+                  type="text"
+                  id="new-metric-value"
+                  placeholder="Value"
+                  style="width: 120px; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                  required
+                />
+                <input
+                  type="text"
+                  id="new-metric-trend"
+                  placeholder="Trend"
+                  style="width: 100px; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                />
+                <select
+                  id="new-metric-color"
+                  style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                >
+                  <option value="success">Success</option>
+                  <option value="info">Info</option>
+                  <option value="warning">Warning</option>
+                  <option value="error">Error</option>
+                </select>
+                <button type="submit" class="btn btn-primary"
+                  >✚ Add Metric</button
+                >
+              </form>
+            </div>
+            <div id="metrics-list" style="display: grid; gap: 1rem;"></div>
+          </div>
+        </section>
+
+        <section class="fade-in">
+          <div class="card">
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"
+            >
+              <span>📡</span> Activity Log Management
+            </h2>
+            <div
+              style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 8px;"
+            >
+              <h3 style="margin-bottom: 1rem;">Add New Activity</h3>
+              <form
+                id="add-activity-form"
+                style="display: flex; gap: 1rem; flex-wrap: wrap;"
+              >
+                <input
+                  type="text"
+                  id="new-activity-agent"
+                  placeholder="Agent"
+                  style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                  required
+                />
+                <input
+                  type="text"
+                  id="new-activity-action"
+                  placeholder="Action"
+                  style="flex: 2; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                  required
+                />
+                <select
+                  id="new-activity-type"
+                  style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
+                >
+                  <option value="info">Info</option>
+                  <option value="success">Success</option>
+                  <option value="warning">Warning</option>
+                  <option value="error">Error</option>
+                </select>
+                <button type="submit" class="btn btn-primary"
+                  >✚ Add Activity</button
+                >
+              </form>
+            </div>
+            <div id="activities-list" style="display: grid; gap: 1rem;"></div>
+          </div>
+        </section>
+
+        <!-- Save & Export Section -->
+        <section style="margin-top: 3rem;" class="fade-in">
+          <div
+            class="card"
+            style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-tertiary)); border-color: var(--accent-primary);"
+          >
+            <h3 style="margin-bottom: 1rem;">Data Management</h3>
+            <div
+              style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;"
+            >
+              <div style="color: var(--text-secondary); font-size: 0.9em;">
+                All changes are automatically saved to backend.
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" id="save-btn"
+                >💾 Force Save to Server</button
+              >
+              <button class="btn btn-secondary" id="reset-btn"
+                >🔄 Reset to Defaults</button
+              >
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      // State
+      let state = {
         projects: [],
         systems: [],
         metrics: [],
-        activities: []
-    };
-    
-    const API_URL = 'http://localhost:8000/api/dashboard';
+        activities: [],
+      };
 
-    // Fetch Initial Data
-    async function init() {
+      const API_URL = "http://localhost:8000/api/dashboard";
+
+      // Fetch Initial Data
+      async function init() {
         try {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            if (data) {
-                state = data;
-                renderAll();
-            }
-        } catch(e) {
-            console.error("Fetch failed", e);
+          const res = await fetch(API_URL);
+          const data = await res.json();
+          if (data) {
+            state = data;
+            renderAll();
+          }
+        } catch (e) {
+          console.error("Fetch failed", e);
         }
-    }
+      }
 
-    // Save Data
-    async function save() {
+      // Save Data
+      async function save() {
         try {
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(state)
-            });
-            console.log("Saved");
-        } catch(e) {
-            console.error("Save failed", e);
-            alert("Failed to save to server!");
+          await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(state),
+          });
+          console.log("Saved");
+        } catch (e) {
+          console.error("Save failed", e);
+          alert("Failed to save to server!");
         }
-    }
+      }
 
-    // Render Functions
-    function renderProjects() {
-        const list = document.getElementById('projects-list');
-        list.innerHTML = state.projects.map((p, i) => `
+      // Render Functions
+      function renderProjects() {
+        const list = document.getElementById("projects-list");
+        list.innerHTML = state.projects
+          .map(
+            (p, i) => `
             <div class="card" style="padding: 1.25rem; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr auto; gap: 1rem; align-items: center;">
                 <input value="${p.name}" onchange="updateState('projects', ${i}, 'name', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                 <input value="${p.description}" onchange="updateState('projects', ${i}, 'description', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                 <select onchange="updateState('projects', ${i}, 'status', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                    <option value="Active" ${p.status === 'Active' ? 'selected' : ''}>Active</option>
-                    <option value="On Hold" ${p.status === 'On Hold' ? 'selected' : ''}>On Hold</option>
-                    <option value="Completed" ${p.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                    <option value="Planning" ${p.status === 'Planning' ? 'selected' : ''}>Planning</option>
+                    <option value="Active" ${p.status === "Active" ? "selected" : ""}>Active</option>
+                    <option value="On Hold" ${p.status === "On Hold" ? "selected" : ""}>On Hold</option>
+                    <option value="Completed" ${p.status === "Completed" ? "selected" : ""}>Completed</option>
+                    <option value="Planning" ${p.status === "Planning" ? "selected" : ""}>Planning</option>
                 </select>
-                <input value="${Array.isArray(p.tags) ? p.tags.join(', ') : p.tags}" onchange="updateState('projects', ${i}, 'tags', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
+                <input value="${Array.isArray(p.tags) ? p.tags.join(", ") : p.tags}" onchange="updateState('projects', ${i}, 'tags', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                 <button class="btn btn-secondary" onclick="removeItem('projects', ${i})">🗑️</button>
             </div>
-        `).join('');
-    }
+        `,
+          )
+          .join("");
+      }
 
-    function renderSystems() {
-         const list = document.getElementById('systems-list');
-        list.innerHTML = state.systems.map((s, i) => `
+      function renderSystems() {
+        const list = document.getElementById("systems-list");
+        list.innerHTML = state.systems
+          .map(
+            (s, i) => `
             <div class="card" style="padding: 1.25rem; display: grid; grid-template-columns: 1fr 2fr 1fr auto; gap: 1rem; align-items: center;">
                 <input value="${s.name}" onchange="updateState('systems', ${i}, 'name', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                 <select onchange="updateState('systems', ${i}, 'status', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                    <option value="operational" ${s.status === 'operational' ? 'selected' : ''}>Operational</option>
-                    <option value="degraded" ${s.status === 'degraded' ? 'selected' : ''}>Degraded</option>
-                    <option value="offline" ${s.status === 'offline' ? 'selected' : ''}>Offline</option>
-                    <option value="maintenance" ${s.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                    <option value="operational" ${s.status === "operational" ? "selected" : ""}>Operational</option>
+                    <option value="degraded" ${s.status === "degraded" ? "selected" : ""}>Degraded</option>
+                    <option value="offline" ${s.status === "offline" ? "selected" : ""}>Offline</option>
+                    <option value="maintenance" ${s.status === "maintenance" ? "selected" : ""}>Maintenance</option>
                 </select>
                 <input value="${s.uptime}" onchange="updateState('systems', ${i}, 'uptime', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                 <button class="btn btn-secondary" onclick="removeItem('systems', ${i})">🗑️</button>
             </div>
-        `).join('');
-    }
+        `,
+          )
+          .join("");
+      }
 
-    function renderMetrics() {
-        const list = document.getElementById('metrics-list');
-        list.innerHTML = state.metrics.map((m, i) => `
+      function renderMetrics() {
+        const list = document.getElementById("metrics-list");
+        list.innerHTML = state.metrics
+          .map(
+            (m, i) => `
             <div class="card" style="padding: 1.25rem; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 1rem; align-items: center;">
                 <input value="${m.label}" onchange="updateState('metrics', ${i}, 'label', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                 <input value="${m.value}" onchange="updateState('metrics', ${i}, 'value', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                 <input value="${m.trend}" onchange="updateState('metrics', ${i}, 'trend', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                  <select onchange="updateState('metrics', ${i}, 'color', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                    <option value="success" ${m.color === 'success' ? 'selected' : ''}>Success</option>
-                    <option value="info" ${m.color === 'info' ? 'selected' : ''}>Info</option>
-                    <option value="warning" ${m.color === 'warning' ? 'selected' : ''}>Warning</option>
-                    <option value="error" ${m.color === 'error' ? 'selected' : ''}>Error</option>
+                    <option value="success" ${m.color === "success" ? "selected" : ""}>Success</option>
+                    <option value="info" ${m.color === "info" ? "selected" : ""}>Info</option>
+                    <option value="warning" ${m.color === "warning" ? "selected" : ""}>Warning</option>
+                    <option value="error" ${m.color === "error" ? "selected" : ""}>Error</option>
                 </select>
                 <button class="btn btn-secondary" onclick="removeItem('metrics', ${i})">🗑️</button>
             </div>
-        `).join('');
-    }
+        `,
+          )
+          .join("");
+      }
 
-     function renderActivities() {
-        const list = document.getElementById('activities-list');
-        list.innerHTML = state.activities.map((a, i) => `
+      function renderActivities() {
+        const list = document.getElementById("activities-list");
+        list.innerHTML = state.activities
+          .map(
+            (a, i) => `
             <div class="card" style="padding: 1.25rem; display: grid; grid-template-columns: 1fr 1fr 2fr 1fr auto; gap: 1rem; align-items: center;">
                  <input value="${a.time}" onchange="updateState('activities', ${i}, 'time', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                  <input value="${a.agent}" onchange="updateState('activities', ${i}, 'agent', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                  <input value="${a.action}" onchange="updateState('activities', ${i}, 'action', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);" />
                  <select onchange="updateState('activities', ${i}, 'type', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary);">
-                    <option value="info" ${a.type === 'info' ? 'selected' : ''}>Info</option>
-                    <option value="success" ${a.type === 'success' ? 'selected' : ''}>Success</option>
-                    <option value="warning" ${a.type === 'warning' ? 'selected' : ''}>Warning</option>
-                    <option value="error" ${a.type === 'error' ? 'selected' : ''}>Error</option>
+                    <option value="info" ${a.type === "info" ? "selected" : ""}>Info</option>
+                    <option value="success" ${a.type === "success" ? "selected" : ""}>Success</option>
+                    <option value="warning" ${a.type === "warning" ? "selected" : ""}>Warning</option>
+                    <option value="error" ${a.type === "error" ? "selected" : ""}>Error</option>
                 </select>
                 <button class="btn btn-secondary" onclick="removeItem('activities', ${i})">🗑️</button>
             </div>
-        `).join('');
-    }
+        `,
+          )
+          .join("");
+      }
 
-    function renderAll() {
+      function renderAll() {
         renderProjects();
         renderSystems();
         renderMetrics();
         renderActivities();
-    }
+      }
 
-    // Global Action Handlers (attached to window for inline onclick access)
-    window.updateState = (category, index, field, value) => {
-        if (category === 'projects' && field === 'tags') {
-            state.projects[index].tags = value.split(',').map(t => t.trim()).filter(Boolean);
+      // Global Action Handlers (attached to window for inline onclick access)
+      window.updateState = (category, index, field, value) => {
+        if (category === "projects" && field === "tags") {
+          state.projects[index].tags = value
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean);
         } else {
-            state[category][index][field] = value;
+          state[category][index][field] = value;
         }
         save();
-    };
+      };
 
-    window.removeItem = (category, index) => {
+      window.removeItem = (category, index) => {
         state[category].splice(index, 1);
         renderAll();
         save();
-    };
+      };
 
-    // Event Listeners for Forms
-    document.getElementById('add-project-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const tags = document.getElementById('new-project-tags').value;
-        const newProject = {
-            name: document.getElementById('new-project-name').value,
-            description: document.getElementById('new-project-desc').value,
-            status: document.getElementById('new-project-status').value,
-            tags: tags.split(',').map(t => t.trim()).filter(Boolean)
-        };
-        state.projects.push(newProject);
-        renderAll();
-        save();
-        e.target.reset();
-    });
-
-    document.getElementById('add-system-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newSystem = {
-            name: document.getElementById('new-system-name').value,
-            status: document.getElementById('new-system-status').value,
-            uptime: document.getElementById('new-system-uptime').value
-        };
-        state.systems.push(newSystem);
-        renderAll();
-        save();
-        e.target.reset();
-    });
-    
-    document.getElementById('add-metric-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newMetric = {
-            label: document.getElementById('new-metric-label').value,
-            value: document.getElementById('new-metric-value').value,
-            trend: document.getElementById('new-metric-trend').value,
-            color: document.getElementById('new-metric-color').value
-        };
-        state.metrics.push(newMetric);
-        renderAll();
-        save();
-        e.target.reset();
-    });
-    
-    document.getElementById('add-activity-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-        const newActivity = {
-            time: timeString,
-            agent: document.getElementById('new-activity-agent').value,
-            action: document.getElementById('new-activity-action').value,
-            type: document.getElementById('new-activity-type').value
-        };
-        state.activities.unshift(newActivity); // Add to top
-        renderAll();
-        save();
-        e.target.reset();
-    });
-
-    document.getElementById('save-btn').addEventListener('click', save);
-    document.getElementById('reset-btn').addEventListener('click', () => {
-        if(confirm("Reset all data?")) {
-             // Just empty it, or set to some defaults
-             state = { systems: [], projects: [], metrics: [], activities: [] };
-             renderAll();
-             save();
-             window.location.reload(); // To possibly re-fetch defaults if API logic had them
-        }
-    });
-
-    // Theme logic copy from index
-    // ... (theme logic remains same, but omitted for brevity if already globally handled or kept in script)
-    const themeToggle = document.getElementById('theme-toggle');
-    if(themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme') || 'dark';
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('theme', next);
-            // Icons
-            const sun = document.querySelector('.icon-sun');
-            const moon = document.querySelector('.icon-moon');
-            if(next === 'light') { sun.style.display='inline'; moon.style.display='none'; }
-            else { sun.style.display='none'; moon.style.display='inline'; }
+      // Event Listeners for Forms
+      document
+        .getElementById("add-project-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const tags = document.getElementById("new-project-tags").value;
+          const newProject = {
+            name: document.getElementById("new-project-name").value,
+            description: document.getElementById("new-project-desc").value,
+            status: document.getElementById("new-project-status").value,
+            tags: tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean),
+          };
+          state.projects.push(newProject);
+          renderAll();
+          save();
+          e.target.reset();
         });
-    }
 
-    // Init
-    init();
-</script>
-</body>
+      document
+        .getElementById("add-system-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const newSystem = {
+            name: document.getElementById("new-system-name").value,
+            status: document.getElementById("new-system-status").value,
+            uptime: document.getElementById("new-system-uptime").value,
+          };
+          state.systems.push(newSystem);
+          renderAll();
+          save();
+          e.target.reset();
+        });
+
+      document
+        .getElementById("add-metric-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const newMetric = {
+            label: document.getElementById("new-metric-label").value,
+            value: document.getElementById("new-metric-value").value,
+            trend: document.getElementById("new-metric-trend").value,
+            color: document.getElementById("new-metric-color").value,
+          };
+          state.metrics.push(newMetric);
+          renderAll();
+          save();
+          e.target.reset();
+        });
+
+      document
+        .getElementById("add-activity-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const now = new Date();
+          const timeString = now.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+          const newActivity = {
+            time: timeString,
+            agent: document.getElementById("new-activity-agent").value,
+            action: document.getElementById("new-activity-action").value,
+            type: document.getElementById("new-activity-type").value,
+          };
+          state.activities.unshift(newActivity); // Add to top
+          renderAll();
+          save();
+          e.target.reset();
+        });
+
+      document.getElementById("save-btn").addEventListener("click", save);
+      document.getElementById("reset-btn").addEventListener("click", () => {
+        if (confirm("Reset all data?")) {
+          // Just empty it, or set to some defaults
+          state = { systems: [], projects: [], metrics: [], activities: [] };
+          renderAll();
+          save();
+          window.location.reload(); // To possibly re-fetch defaults if API logic had them
+        }
+      });
+
+      // Theme logic copy from index
+      // ... (theme logic remains same, but omitted for brevity if already globally handled or kept in script)
+      const themeToggle = document.getElementById("theme-toggle");
+      if (themeToggle) {
+        themeToggle.addEventListener("click", () => {
+          const current =
+            document.documentElement.getAttribute("data-theme") || "dark";
+          const next = current === "dark" ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          localStorage.setItem("theme", next);
+          // Icons
+          const sun = document.querySelector(".icon-sun");
+          const moon = document.querySelector(".icon-moon");
+          if (next === "light") {
+            sun.style.display = "inline";
+            moon.style.display = "none";
+          } else {
+            sun.style.display = "none";
+            moon.style.display = "inline";
+          }
+        });
+
+        // Sync icons on load
+        const root = document.documentElement;
+        if (root.getAttribute("data-theme") === "dark") {
+          const sun = document.querySelector(".icon-sun");
+          const moon = document.querySelector(".icon-moon");
+          if (sun) sun.style.display = "none";
+          if (moon) moon.style.display = "inline";
+        }
+      }
+
+      // Init
+      init();
+    </script>
+  </body>
 </html>

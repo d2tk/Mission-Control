@@ -1,9 +1,11 @@
 import asyncio
 import json
-import requests
+import urllib.request
+import urllib.parse
 import os
 import time
 import subprocess
+from pathlib import Path
 from playwright.async_api import async_playwright
 
 API_URL = "http://localhost:8000/api/messages"
@@ -19,9 +21,7 @@ class AIBridge:
         self.busy_agents = set()
         self.pages = {}
         self.agent_config = {
-            'chatgpt': {'url': 'https://chatgpt.com/', 'lifecycle': 'warm'},
-            'grok': {'url': 'https://grok.com/', 'lifecycle': 'warm'},
-            'gemini': {'url': 'https://gemini.google.com/', 'lifecycle': 'warm'}
+            'chatgpt': {'url': 'https://chatgpt.com/', 'lifecycle': 'warm'}
         }
         self.playwright = None
         self.context = None
@@ -85,17 +85,20 @@ class AIBridge:
 
     async def sync_initial_state(self):
         try:
-            res = await asyncio.to_thread(requests.get, API_URL, timeout=5)
-            messages = res.json()
-            if messages:
-                self.last_message_id = messages[-1]['id']
+            req = urllib.request.Request(API_URL)
+            with urllib.request.urlopen(req, timeout=5) as response:
+                if response.status == 200:
+                    messages = json.loads(response.read().decode())
+                    if messages:
+                        self.last_message_id = messages[-1]['id']
         except Exception as e:
             print(f"Error syncing state: {e}")
 
     async def check_messages(self):
         try:
-            res = await asyncio.to_thread(requests.get, API_URL, timeout=5)
-            messages = res.json()
+            req = urllib.request.Request(API_URL)
+            res_data = await asyncio.to_thread(lambda: urllib.request.urlopen(req, timeout=5).read())
+            messages = json.loads(res_data.decode())
             
             for msg in messages:
                 msg_id = msg['id']
@@ -144,8 +147,7 @@ class AIBridge:
 
     async def inject_briefings(self, msg_id):
         briefings = {
-            'ChatGPT': ('chatgpt', 'briefings/tactical_brief.md'),
-            'Grok': ('grok', 'briefings/strategic_brief.md')
+            'ChatGPT': ('chatgpt', 'briefings/tactical_brief.md')
         }
         
         for agent_name, (page_key, file_path) in briefings.items():
@@ -161,8 +163,6 @@ class AIBridge:
                 # Re-use existing handler logic but with briefing content
                 if agent_name == 'ChatGPT':
                     await self.handle_generic(agent_name, page_key, content, 'div#prompt-textarea', self.chatgpt_scraper)
-                elif agent_name == 'Grok':
-                    await self.handle_generic(agent_name, page_key, content, 'textarea[aria-label="Ask Grok anything"]', self.grok_scraper)
                     
             except Exception as e:
                 print(f"Failed to inject briefing for {agent_name}: {e}", flush=True)
@@ -173,8 +173,8 @@ class AIBridge:
             print("Executing sentry.py...", flush=True)
             result = await asyncio.to_thread(
                 subprocess.run,
-                ['python3', 'sentry.py'],
-                cwd='/home/a2/Desktop/gem/agents',
+                ['python3', 'sentry.py', '--once'],
+                cwd='/home/a2/Desktop/gem/opb/backend',
                 capture_output=True,
                 text=True,
                 timeout=30
@@ -225,31 +225,27 @@ class AIBridge:
             if not page: raise Exception("Failed to ensure tab.")
             
             await page.bring_to_front()
-            before_text = await page.evaluate("document.body.innerText")
             
             # Input
             target = page.locator(selector).first
             await target.wait_for(state='visible', timeout=15000)
             await target.click()
-            # Use fill for instant entry, safer for long text
             await target.fill(prompt) 
             await page.keyboard.press('Enter')
             
-            # Wait & Scrape (Lifecycle adjustment: shorter wait steps)
-            for s in [30, 60]:
-                await asyncio.sleep(30)
-                await self.post_message(agent_name, f"Thinking... ({s}s passed). Over. Roger.")
+            # Event-Driven Wait (MutationObserver)
+            try:
+                await self.wait_for_completion(page)
+            except Exception as e:
+                print(f"Wait warning: {e}", flush=True)
+                # Fallback small sleep if observer fails
+                await asyncio.sleep(5)
             
-            await asyncio.sleep(5)
-            after_text = await page.evaluate("document.body.innerText")
+            # Scrape specific latest message
+            answer = await scraper(page)
             
-            responses = await scraper(page)
-            if responses and len(responses[-1].strip()) > 10:
-                answer = responses[-1]
-            elif len(after_text) > len(before_text):
-                answer = after_text[len(before_text):].strip()
-            else:
-                answer = "Extraction failed. UI mutation detected. Over. Roger."
+            if not answer:
+                answer = "Extraction failed. No new message detected. Over. Roger."
             
             await self.post_message(agent_name, answer)
             await self.update_state({"agents": {agent_name: {"status": "idle", "last_task": prompt[:50]}}})
@@ -265,41 +261,86 @@ class AIBridge:
         finally:
             if agent_name in self.busy_agents: self.busy_agents.remove(agent_name)
 
+    async def wait_for_completion(self, page):
+        """Waits for DOM mutations to settle (silence for 1.5s)."""
+        print("Waiting for generation to settle...", flush=True)
+        await page.evaluate("""
+            window.__waitForAssistant = () => new Promise(resolve => {
+                let lastChange = Date.now();
+                const obs = new MutationObserver(() => { lastChange = Date.now(); });
+                // Observe entire body for changes (text-streaming usually triggers this)
+                obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+                
+                const check = setInterval(() => {
+                    const silence = Date.now() - lastChange;
+                    // If 1.5s of silence, we assume generation stopped. 
+                    // Verify also that Stop button is gone if possible (optional heuristic improvement)
+                    if (silence > 1500) {
+                        clearInterval(check);
+                        obs.disconnect();
+                        resolve(true);
+                    }
+                }, 300);
+                
+                // Safety timeout 60s
+                setTimeout(() => {
+                     clearInterval(check);
+                     obs.disconnect();
+                     resolve(true);
+                }, 60000);
+            });
+        """)
+        await page.evaluate("window.__waitForAssistant()")
+        print("Generation settled.", flush=True)
+
     async def chatgpt_scraper(self, page):
         try:
-            # FORCE DOM STRATEGY: Execute direct JS to bypass locator instability
             return await page.evaluate("""() => {
-                const msgs = document.querySelectorAll('div[data-message-author-role="assistant"]');
-                return Array.from(msgs).map(m => m.innerText);
+                const msgs = [...document.querySelectorAll('div[data-message-author-role="assistant"]')];
+                if (msgs.length === 0) return null;
+                const last = msgs[msgs.length - 1];
+                return last.innerText;
             }""")
         except Exception as e:
-            print(f"DOM Force Error: {e}")
-            return []
+            print(f"ChatGPT Scraper Error: {e}")
+            return None
 
     async def gemini_scraper(self, page):
-        try: return await page.locator('div.message-content').all_inner_texts()
-        except: return []
+        try:
+            return await page.evaluate("""() => {
+                 const msgs = [...document.querySelectorAll('div.message-content')];
+                 if (msgs.length === 0) return null;
+                 return msgs[msgs.length - 1].innerText;
+            }""")
+        except: return None
 
     async def grok_scraper(self, page):
         try:
             return await page.evaluate("""() => {
-                const msgs = document.querySelectorAll('div.message-row-assistant, .markdown.prose');
-                return Array.from(msgs).map(m => m.innerText);
+                const msgs = [...document.querySelectorAll('div.message-row-assistant, .markdown.prose')];
+                if (msgs.length === 0) return null;
+                return msgs[msgs.length - 1].innerText;
             }""")
         except Exception as e:
-            print(f"Grok DOM Force Error: {e}")
-            return []
+            print(f"Grok Scraper Error: {e}")
+            return None
 
     async def generic_scraper(self, page):
-        try: return await page.locator('div.message-content, div.markdown').all_inner_texts()
-        except: return []
+        # Fallback
+        return None
 
     async def post_message(self, sender, text):
-        try: await asyncio.to_thread(requests.post, API_URL, json={"sender": sender, "message": text}, timeout=5)
+        try: 
+            data = json.dumps({"sender": sender, "message": text}).encode('utf-8')
+            req = urllib.request.Request(API_URL, data=data, headers={'Content-Type': 'application/json'})
+            await asyncio.to_thread(lambda: urllib.request.urlopen(req, timeout=5))
         except: pass
 
     async def update_state(self, updates):
-        try: await asyncio.to_thread(requests.post, STATE_URL, json=updates, timeout=5)
+        try: 
+            data = json.dumps(updates).encode('utf-8')
+            req = urllib.request.Request(STATE_URL, data=data, headers={'Content-Type': 'application/json'})
+            await asyncio.to_thread(lambda: urllib.request.urlopen(req, timeout=5))
         except: pass
 
 if __name__ == "__main__":

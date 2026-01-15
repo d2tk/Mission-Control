@@ -35,3 +35,41 @@
 
 ## 4. Session Persistence
 - These instructions should be pasted as the **Initial System Prompt** (or Custom Instructions) at the start of every new session to ensure operational consistency.
+
+## 5. Strict Interaction Protocol (SIP)
+To ensure **Replicability** and **Context Integrity**, Antigravity MUST adhere to this template when consulting ChatGPT for technical tasks.
+
+### Mandatory Message Template
+```markdown
+=== SIP: CONSULTATION REQUEST ===
+
+[1] ROLE / CONTEXT
+- Role: Liaison / Project Sentry
+- System: Virtual Chat Room (Playwright Bridge)
+
+[2] FILE CONTEXT
+- (List absolute paths)
+- (Brief purpose per file)
+
+[3] CURRENT STATE
+- What is working / broken
+- Recent changes
+
+[4] CODE (VERBATIM)
+<<<BEGIN CODE>>>
+(Paste exact code here - NO summaries)
+<<<END CODE>>>
+
+[5] OBJECTIVE
+- Specific question or request
+- Constraints (e.g., "Must allow concurrent writes")
+
+[6] RESPONSE REQUIREMENTS
+- Desired format (e.g., Code only, Analysis only, JSON)
+
+=== END SIP REQUEST ===
+```
+
+**Enforcement:**
+- If any section is missing, ChatGPT acts as a gatekeeper and performs a `SIP VIOLATION` rejection.
+- No code summaries allowed.

@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 
 WORKSPACE = Path("/home/a2/Desktop/gem")
-STATE_FILE = Path("/home/a2/Desktop/gem/agents/.sentry_state.json")
+STATE_FILE = Path("/home/a2/Desktop/gem/opb/backend/.sentry_state.json")
 IGNORE_PATTERNS = {'.git', '__pycache__', 'node_modules', '.venv', 'browser_data'}
 
 class SentryAudit:
@@ -254,7 +254,30 @@ class SentryAudit:
         self.save_current_state()
         return report
 
+import time
+import sys
+
 if __name__ == "__main__":
     sentry = SentryAudit()
-    report = sentry.run()
-    print(report)
+    
+    # Check for --once flag for single-run mode (used by !audit command)
+    if "--once" in sys.argv:
+        try:
+            report = sentry.run()
+            print(report, flush=True)
+        except Exception as e:
+            print(f"Error in audit: {e}", flush=True)
+            sys.exit(1)
+    else:
+        # Daemon mode - continuous monitoring
+        print("Starting Sentry Audit Daemon...", flush=True)
+        while True:
+            try:
+                report = sentry.run()
+                print(report, flush=True)
+            except Exception as e:
+                print(f"Error in audit cycle: {e}", flush=True)
+            
+            # Run every 60 seconds
+            time.sleep(60)
+
