@@ -1,16 +1,291 @@
 ---
+import '../styles/global.css';
 
+const currentTime = new Date().toLocaleString('en-US', {
+  timeZone: 'Asia/Seoul',
+  dateStyle: 'full',
+  timeStyle: 'short'
+});
 ---
 
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="generator" content={Astro.generator} />
+  <meta name="description" content="Mission Control - Multi-Agent Command Center" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Previously known as Operational Board / Status Board -->
+  <title>Mission Control | Command Center</title>
+  <script is:inline>
+    // Theme Init (Blocking to prevent FOUC)
+    const savedTheme = localStorage.getItem('theme');
+    const root = document.documentElement;
+    if (savedTheme === 'light') {
+      root.setAttribute('data-theme', 'light');
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header style="padding: 2rem 0; border-bottom: 1px solid var(--border-primary);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1 style="margin-bottom: 0.25rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            <!-- Mission Control (formerly Operational/Status Board) -->
+            🚀 Mission Control
+          </h1>
+          <p style="margin: 0; color: var(--text-tertiary);">{currentTime}</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <button id="theme-toggle" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" aria-label="Toggle theme">
+            <span class="icon-sun" style="display: none;">☀️</span>
+            <span class="icon-moon">🌙</span>
+          </button>
+          <a href="/root_control" class="btn btn-primary" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+            <span>🔐</span> Root Control
+          </a>
+          <span class="status status-success pulse">
+            <span style="width: 8px; height: 8px; background: var(--accent-success); border-radius: 50%; display: inline-block;"></span>
+            All Systems Operational
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main style="padding: 2rem 0;">
+      <!-- Project List -->
+      <section style="margin-bottom: 3rem;" class="fade-in">
+        <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🚀</span> Active Projects
+        </h2>
+        <div class="grid grid-2" id="projects-grid">
+           <!-- Populated via JS -->
+           <div class="card"><p>Loading projects...</p></div>
+        </div>
+      </section>
+
+      <!-- System Status Grid -->
+      <section style="margin-bottom: 3rem;" class="fade-in" style="animation-delay: 0.1s;">
+        <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🤖</span> Agent Status
+        </h2>
+        <div class="grid grid-4" id="agent-status-grid">
+           <!-- Populated via JS -->
+           <div class="card"><p>Loading system status...</p></div>
+        </div>
+      </section>
+
+      <!-- Metrics Grid -->
+      <section style="margin-bottom: 3rem;" class="fade-in" style="animation-delay: 0.2s;">
+        <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📊</span> Key Metrics
+        </h2>
+        <div class="grid grid-4" id="metrics-grid">
+           <!-- Populated via JS -->
+           <div class="card"><p>Loading metrics...</p></div>
+        </div>
+      </section>
+
+      <!-- Recent Activity -->
+      <section class="fade-in" style="animation-delay: 0.4s;">
+        <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📡</span> Recent Activity
+        </h2>
+        <div class="card">
+          <div style="display: flex; flex-direction: column; gap: 1rem;" id="recent-activity-list">
+             <!-- Populated via JS -->
+             <p>Loading activity...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section style="margin-top: 3rem;" class="fade-in" style="animation-delay: 0.6s;">
+        <div class="card" style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-tertiary)); border-color: var(--accent-primary);">
+          <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-primary">🔍 Run Audit</button>
+            <button class="btn btn-secondary">📊 View Reports</button>
+            <button class="btn btn-secondary">⚙️ Settings</button>
+            <button class="btn btn-secondary">📝 Logs</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer style="padding: 2rem 0; border-top: 1px solid var(--border-primary); margin-top: 3rem;">
+      <div style="text-align: center; color: var(--text-tertiary); font-size: 0.875rem;">
+        <p style="margin: 0;">Mission Control v1.0 | Multi-Agent Command Center</p>
+        <p style="margin: 0.5rem 0 0 0;">Powered by Astro + Flexoki Theme</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:8000/api/dashboard';
+
+    // Real-time Data Fetching
+    const fetchDashboardData = async () => {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        
+        if (data) {
+            if(data.projects) renderProjects(data.projects);
+            if(data.systems) renderSystems(data.systems);
+            if(data.metrics) renderMetrics(data.metrics);
+            if(data.activities) renderActivity(data.activities);
+        }
+      } catch (e) {
+        console.error("Failed to fetch dashboard data:", e);
+      }
+    };
+
+    const renderProjects = (projects) => {
+        const grid = document.getElementById('projects-grid');
+        if (!grid) return;
+        
+        if (projects.length === 0) {
+            grid.innerHTML = '<div class="card"><p>No active projects.</p></div>';
+            return;
+        }
+
+        grid.innerHTML = projects.map(p => `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+              <h3 style="font-size: 1.25rem; margin: 0; color: var(--accent-primary);">${p.name}</h3>
+              <span class="status status-info">${p.status}</span>
+            </div>
+            <p style="margin-bottom: 1rem;">${p.description}</p>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              ${Array.isArray(p.tags) ? p.tags.map(tag => `
+                  <span class="status" style="background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-secondary);">${tag}</span>
+              `).join('') : ''}
+            </div>
+          </div>
+        `).join('');
+    };
+
+    const renderSystems = (systems) => {
+        const grid = document.getElementById('agent-status-grid');
+        if (!grid) return;
+        
+        grid.innerHTML = systems.map((system, index) => {
+            const color = system.status === 'operational' ? 'success' : 
+                          system.status === 'degraded' ? 'warning' : 'error';
+                          
+            return `
+            <div class="card" style="animation-delay: ${index * 0.1}s;">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.125rem; margin: 0;">${system.name}</h3>
+                <span class="status status-${color}" style="font-size: 0.75rem; padding: 0.25rem 0.625rem;">
+                  ${system.status}
+                </span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-tertiary); font-size: 0.875rem;">Uptime</span>
+                  <span style="color: var(--accent-${color}); font-weight: 600;">${system.uptime}</span>
+                </div>
+                <div style="background: var(--bg-tertiary); height: 4px; border-radius: 2px; overflow: hidden;">
+                  <div style="background: linear-gradient(90deg, var(--accent-${color}), var(--accent-primary)); width: ${system.uptime}; height: 100%; transition: width 1s ease;"></div>
+                </div>
+              </div>
+            </div>
+          `}).join('');
+    };
+
+    const renderMetrics = (metrics) => {
+        const grid = document.getElementById('metrics-grid');
+        if (!grid) return;
+
+        grid.innerHTML = metrics.map((metric, index) => `
+            <div class="card" style="animation-delay: ${(index + 4) * 0.1}s;">
+              <div style="margin-bottom: 0.75rem;">
+                <p style="color: var(--text-tertiary); font-size: 0.875rem; margin: 0;">${metric.label}</p>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 2rem; font-weight: 700; color: var(--text-primary);">${metric.value}</span>
+                <span class="status status-${metric.color}" style="font-size: 0.75rem; padding: 0.125rem 0.5rem;">
+                  ${metric.trend}
+                </span>
+              </div>
+            </div>
+        `).join('');
+    };
+
+    const renderActivity = (activities) => {
+        const list = document.getElementById('recent-activity-list');
+        if (!list) return;
+
+        // Take top 5
+        const recent = activities.slice(0, 5); 
+
+        list.innerHTML = recent.map((activity, index) => `
+              <div style="display: flex; gap: 1rem; padding-bottom: 1rem; ${index < recent.length - 1 ? 'border-bottom: 1px solid var(--border-primary);' : ''}">
+                <div style="min-width: 60px; color: var(--text-tertiary); font-size: 0.875rem; font-family: monospace;">
+                  ${activity.time}
+                </div>
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <span style="font-weight: 600; color: var(--accent-primary);">${activity.agent}</span>
+                    <span class="status status-${activity.type}" style="font-size: 0.7rem; padding: 0.125rem 0.5rem;">
+                      ${activity.type}
+                    </span>
+                  </div>
+                  <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${activity.action}</p>
+                </div>
+              </div>
+        `).join('');
+    };
+
+    // Update time
+    setInterval(() => {
+      const timeElement = document.querySelector('header p');
+      if (timeElement) {
+        const now = new Date().toLocaleString('en-US', {
+            timeZone: 'Asia/Seoul',
+            dateStyle: 'full',
+            timeStyle: 'short'
+        });
+        timeElement.textContent = now;
+      }
+    }, 1000);
+
+    // Initial Fetch & Poll
+    fetchDashboardData();
+    setInterval(fetchDashboardData, 3000);
+  </script>
+<script>
+// Theme toggle handler
+const toggleBtn = document.getElementById('theme-toggle');
+if (toggleBtn) {
+  toggleBtn.addEventListener('click', () => {
+    const root = document.documentElement;
+    const current = root.getAttribute('data-theme') || 'dark';
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    // swap icons
+    const sun = document.querySelector('.icon-sun');
+    const moon = document.querySelector('.icon-moon');
+    if (newTheme === 'light') {
+      sun.style.display = 'inline';
+      moon.style.display = 'none';
+    } else {
+      sun.style.display = 'none';
+      moon.style.display = 'inline';
+    }
+  });
+}
+</script>
+</body>
 </html>

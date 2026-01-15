@@ -1,0 +1,331 @@
+/* Flexoki Color Theme */
+
+/* Light Mode (Default via attribute) */
+[data-theme="light"] {
+  /* Base colors */
+  --flexoki-black: #100F0F;
+  --flexoki-paper: #FFFCF0;
+  --flexoki-950: #F2F0E5;
+  --flexoki-900: #E6E4D9;
+  --flexoki-850: #CECDC3;
+  --flexoki-800: #DAD8CE;
+  --flexoki-700: #B7B5AC;
+  --flexoki-600: #878580;
+  --flexoki-500: #6F6E69;
+  --flexoki-300: #575653;
+  --flexoki-200: #403E3C;
+  --flexoki-150: #282726;
+  --flexoki-100: #100F0F;
+
+  /* Semantic tokens remapped for light mode */
+  --bg-primary: var(--flexoki-paper);
+  --bg-secondary: var(--flexoki-950);
+  --bg-tertiary: var(--flexoki-900);
+  --bg-elevated: #FFF;
+
+  --text-primary: var(--flexoki-black);
+  --text-secondary: var(--flexoki-300);
+  --text-tertiary: var(--flexoki-600);
+
+  --border-primary: var(--flexoki-850);
+  --border-secondary: var(--flexoki-700);
+
+  /* Accents - darker for contrast on light bg */
+  --accent-primary: #24837B;
+  /* Cyan */
+  --accent-secondary: #205EA6;
+  /* Blue */
+  --accent-success: #66800B;
+  /* Green */
+  --accent-warning: #AD8301;
+  /* Yellow */
+  --accent-error: #AF3029;
+  /* Red */
+  --accent-info: #5E409D;
+  /* Purple */
+}
+
+/* Dark Mode (Default) */
+:root {
+
+  /* Base colors */
+  --flexoki-black: #100F0F;
+  --flexoki-paper: #1C1B1A;
+  --flexoki-950: #282726;
+  --flexoki-900: #343331;
+  --flexoki-850: #403E3C;
+  --flexoki-800: #575653;
+  --flexoki-700: #6F6E69;
+  --flexoki-600: #878580;
+  --flexoki-500: #B7B5AC;
+  --flexoki-300: #CECDC3;
+  --flexoki-200: #E6E4D9;
+  --flexoki-150: #F2F0E5;
+  --flexoki-100: #FFFCF0;
+
+  /* Accent colors */
+  --flexoki-red: #AF3029;
+  --flexoki-red-light: #D14D41;
+  --flexoki-orange: #BC5215;
+  --flexoki-orange-light: #DA702C;
+  --flexoki-yellow: #AD8301;
+  --flexoki-yellow-light: #D0A215;
+  --flexoki-green: #66800B;
+  --flexoki-green-light: #879A39;
+  --flexoki-cyan: #24837B;
+  --flexoki-cyan-light: #3AA99F;
+  --flexoki-blue: #205EA6;
+  --flexoki-blue-light: #4385BE;
+  --flexoki-purple: #5E409D;
+  --flexoki-purple-light: #8B7EC8;
+  --flexoki-magenta: #A02F6F;
+  --flexoki-magenta-light: #CE5D97;
+
+  /* Semantic tokens */
+  --bg-primary: var(--flexoki-black);
+  --bg-secondary: var(--flexoki-paper);
+  --bg-tertiary: var(--flexoki-950);
+  --bg-elevated: var(--flexoki-900);
+
+  --text-primary: var(--flexoki-200);
+  --text-secondary: var(--flexoki-500);
+  --text-tertiary: var(--flexoki-700);
+
+  --border-primary: var(--flexoki-850);
+  --border-secondary: var(--flexoki-800);
+
+  --accent-primary: var(--flexoki-cyan-light);
+  --accent-secondary: var(--flexoki-blue-light);
+  --accent-success: var(--flexoki-green-light);
+  --accent-warning: var(--flexoki-yellow-light);
+  --accent-error: var(--flexoki-red-light);
+  --accent-info: var(--flexoki-purple-light);
+}
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 0.875rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+  margin-bottom: 0.625rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-secondary);
+}
+
+/* Utility classes */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: var(--border-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  color: var(--flexoki-black);
+}
+
+.btn-primary:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(58, 169, 159, 0.3);
+}
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Status indicators */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-success {
+  background: rgba(135, 154, 57, 0.15);
+  color: var(--accent-success);
+  border: 1px solid var(--accent-success);
+}
+
+.status-warning {
+  background: rgba(208, 162, 21, 0.15);
+  color: var(--accent-warning);
+  border: 1px solid var(--accent-warning);
+}
+
+.status-error {
+  background: rgba(209, 77, 65, 0.15);
+  color: var(--accent-error);
+  border: 1px solid var(--accent-error);
+}
+
+.status-info {
+  background: rgba(139, 126, 200, 0.15);
+  color: var(--accent-info);
+  border: 1px solid var(--accent-info);
+}
+
+/* Grid layouts */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--flexoki-800);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--flexoki-700);
+}

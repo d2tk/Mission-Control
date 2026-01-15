@@ -22,3 +22,21 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Backend Data & Logs (Do not commit operational data)
+backend/*.json
+backend/__pycache__/
+backend/.venv/
+backend/*.log
+backend/mission_state.json
+backend/dashboard_data.json
+backend/conversation_log.json
+
+# VS Code
+.vscode/
+
+# OS Generated
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
