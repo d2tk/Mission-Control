@@ -31,7 +31,8 @@ backend/*.log
 backend/mission_state.json
 backend/dashboard_data.json
 backend/conversation_log.json
-backend/browser_data
+backend/browser_data/
+
 
 # VS Code
 .vscode/
