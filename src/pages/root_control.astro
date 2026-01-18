@@ -180,9 +180,8 @@ const currentTime = new Date().toLocaleString("en-US", {
                   style="padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
                 >
                   <option value="Active">Active</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Planning">Planning</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Complete">Complete</option>
                 </select>
                 <input
                   type="text"
@@ -311,9 +310,8 @@ const currentTime = new Date().toLocaleString("en-US", {
                 <input value="${p.description}" onchange="updateState('projects', ${i}, 'description', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary); background: var(--bg-secondary); color: var(--text-primary);" />
                 <select onchange="updateState('projects', ${i}, 'status', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary); background: var(--bg-secondary); color: var(--text-primary);">
                     <option value="Active" ${p.status === "Active" ? "selected" : ""}>Active</option>
-                    <option value="On Hold" ${p.status === "On Hold" ? "selected" : ""}>On Hold</option>
-                    <option value="Completed" ${p.status === "Completed" ? "selected" : ""}>Completed</option>
-                    <option value="Planning" ${p.status === "Planning" ? "selected" : ""}>Planning</option>
+                    <option value="Pending" ${p.status === "Pending" ? "selected" : ""}>Pending</option>
+                    <option value="Complete" ${p.status === "Complete" || p.status === "Completed" ? "selected" : ""}>Complete</option>
                 </select>
                 <input value="${Array.isArray(p.tags) ? p.tags.join(", ") : p.tags || ""}" onchange="updateState('projects', ${i}, 'tags', this.value)" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-primary); background: var(--bg-secondary); color: var(--text-primary);" />
                 <button class="btn btn-secondary" onclick="removeItem('projects', ${i})" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center;">
