@@ -31,17 +31,25 @@ else
 fi
 
 # 1. Cleanup existing processes
-echo "[1/5] Cleaning up existing processes..."
+echo "[1/5] Cleaning up existing processes and browser locks..."
 pkill -f "python3 server.py" 2>/dev/null || true
 pkill -f "python3 sentry.py" 2>/dev/null || true
 pkill -f "python3 browser_bridge.py" 2>/dev/null || true
 pkill -f "$TARGET_DIR/server" 2>/dev/null || true
 pkill -f "$TARGET_DIR/sentry" 2>/dev/null || true
 pkill -f "$TARGET_DIR/bridge" 2>/dev/null || true
+pkill -f "chromium" 2>/dev/null || true
+pkill -f "chrome" 2>/dev/null || true
 # Kill simple names just in case they are running from target/release directly
 pkill -x "server" 2>/dev/null || true
 pkill -x "sentry" 2>/dev/null || true
-sleep 1
+pkill -x "bridge" 2>/dev/null || true
+
+# Remove SingletonLocks to prevent Chromium profile corruption/errors
+rm -f "$BACKEND_DIR/isolated_data/*/SingletonLock" 2>/dev/null || true
+rm -f "$BACKEND_DIR/isolated_data/*/SingletonCookie" 2>/dev/null || true
+
+sleep 2
 
 # 2. Start Server
 echo "[2/5] Starting Rust Server..."

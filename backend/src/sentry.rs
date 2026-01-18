@@ -6,11 +6,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
 use walkdir::WalkDir;
 use chrono::Local;
-
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
 
 const WORKSPACE: &str = "/home/a2/Desktop/gem";
 const STATE_FILE: &str = "/home/a2/Desktop/gem/opb/backend/.sentry_state.json";
-const IGNORE_PATTERNS: &[&str] = &[".git", "__pycache__", "node_modules", ".venv", "browser_data"];
+const IGNORE_PATTERNS: &[&str] = &[".git", "__pycache__", "node_modules", ".venv", "browser_data", "target"];
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct FileMetadata {
@@ -21,14 +22,29 @@ pub struct FileMetadata {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SentryState {
     pub timestamp: String,
-    pub files: HashMap<String, FileMetadata>,
+    pub files: HashMap<u64, FileMetadata>, // Hashed path keys for memory efficiency
+}
+
+pub struct AuditFinding {
+    pub title: String,
+    pub message: String,
+    pub severity: String, // "OK", "info", "warning", "critical"
+}
+
+pub struct AuditRecommendation {
+    pub action: String,
+}
+
+pub trait AuditRule {
+    fn run(&self, ctx: &SentryAudit) -> (Vec<AuditFinding>, Vec<AuditRecommendation>);
 }
 
 pub struct SentryAudit {
-    workspace: PathBuf,
-    state_file: PathBuf,
-    current_snapshot: HashMap<String, FileMetadata>,
-    previous_snapshot: HashMap<String, FileMetadata>,
+    pub workspace: PathBuf,
+    pub state_file: PathBuf,
+    pub current_snapshot: HashMap<u64, FileMetadata>,
+    pub previous_snapshot: HashMap<u64, FileMetadata>,
+    pub path_map: HashMap<u64, String>, // Temporary path map for reporting
 }
 
 impl SentryAudit {
@@ -38,7 +54,14 @@ impl SentryAudit {
             state_file: PathBuf::from(STATE_FILE),
             current_snapshot: HashMap::new(),
             previous_snapshot: HashMap::new(),
+            path_map: HashMap::new(),
         }
+    }
+
+    fn hash_path(&self, path: &str) -> u64 {
+        let mut s = DefaultHasher::new();
+        path.hash(&mut s);
+        s.finish()
     }
 
     pub fn load_previous_state(&mut self) {
@@ -74,194 +97,75 @@ impl SentryAudit {
                         let mtime = metadata.modified().unwrap_or(SystemTime::now())
                             .duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
 
-                        self.current_snapshot.insert(rel_path, FileMetadata {
+                        let h = self.hash_path(&rel_path);
+                        self.current_snapshot.insert(h, FileMetadata {
                             size: metadata.len(),
                             mtime,
                         });
+                        self.path_map.insert(h, rel_path);
                     }
                 }
             }
         }
     }
 
-    pub fn analyze_changes(&self) -> serde_json::Value {
-        let current_keys: HashSet<_> = self.current_snapshot.keys().collect();
-        let previous_keys: HashSet<_> = self.previous_snapshot.keys().collect();
 
-        let created: Vec<_> = current_keys.difference(&previous_keys).map(|k| k.to_string()).collect();
-        let deleted: Vec<_> = previous_keys.difference(&current_keys).map(|k| k.to_string()).collect();
-        let mut modified = Vec::new();
 
-        for key in current_keys.intersection(&previous_keys) {
-            if self.current_snapshot.get(*key) != self.previous_snapshot.get(*key) {
-                modified.push(key.to_string());
-            }
+    pub fn run(&mut self, full_scan: bool) -> String {
+        self.load_previous_state();
+        self.scan_filesystem();
+
+        let mut rules: Vec<Box<dyn AuditRule>> = vec![
+            Box::new(MemoryRule {}),
+            Box::new(GitRule {}),
+            Box::new(ChurnRule {}),
+        ];
+
+        if full_scan {
+            rules.push(Box::new(DiskRule {}));
         }
 
-        let mut total_delta_bytes: i64 = 0;
-        for path in &created {
-            total_delta_bytes += self.current_snapshot[path].size as i64;
-        }
-        for path in &deleted {
-            total_delta_bytes -= self.previous_snapshot[path].size as i64;
+        let mut all_findings = vec![];
+        let mut all_recommendations = vec![];
+
+        for rule in rules {
+            let (f, r) = rule.run(self);
+            all_findings.extend(f);
+            all_recommendations.extend(r);
         }
 
-        serde_json::json!({
-            "created": created,
-            "modified": modified,
-            "deleted": deleted,
-            "total_delta_mb": total_delta_bytes as f64 / (1024.0 * 1024.0),
-            "churn": created.len() + modified.len() + deleted.len()
-        })
+        let report = self.format_report(&all_findings, &all_recommendations);
+        self.save_current_state();
+        report
     }
 
-    pub fn get_git_status(&self) -> serde_json::Value {
-        if !self.workspace.join(".git").exists() {
-            return serde_json::json!({"available": false});
-        }
-
-        let branch = Command::new("git").arg("branch").arg("--show-current").current_dir(&self.workspace).output().ok()
-            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default();
-
-        let status_out = Command::new("git").arg("status").arg("--porcelain=v1").current_dir(&self.workspace).output().ok()
-            .map(|o| String::from_utf8_lossy(&o.stdout).to_string()).unwrap_or_default();
-
-        let lines: Vec<&str> = status_out.lines().collect();
-        let modified = lines.iter().filter(|l| l.starts_with(" M")).count();
-        let staged = lines.iter().filter(|l| l.starts_with("M ")).count();
-        let untracked = lines.iter().filter(|l| l.starts_with("??")).count();
-
-        let last_commit = Command::new("git").arg("log").arg("-1").arg("--format=%h|%cr").current_dir(&self.workspace).output().ok()
-            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default();
-        let commit_parts: Vec<&str> = last_commit.split('|').collect();
-
-        serde_json::json!({
-            "available": true,
-            "branch": branch,
-            "clean": lines.is_empty(),
-            "modified": modified,
-            "staged": staged,
-            "untracked": untracked,
-            "last_commit": commit_parts.get(0).unwrap_or(&"N/A"),
-            "commit_age": commit_parts.get(1).unwrap_or(&"N/A")
-        })
-    }
-
-    pub fn get_disk_usage(&self) -> serde_json::Value {
-        use sysinfo::Disks;
-        let disks = Disks::new_with_refreshed_list();
-        
-        let mut total_b: u64 = 1;
-        let mut avail_b: u64 = 0;
-        
-        for disk in &disks {
-            total_b = disk.total_space();
-            avail_b = disk.available_space();
-            break; // Use the first disk as in Python shutil.disk_usage
-        }
-        let used_b = total_b.saturating_sub(avail_b);
-
-        let workspace_bytes = Command::new("du").arg("-sb").arg(&self.workspace).output().ok()
-            .and_then(|o| String::from_utf8_lossy(&o.stdout).split_whitespace().next().map(|s| s.parse::<u64>().unwrap_or(0)))
-            .unwrap_or(0);
-
-        serde_json::json!({
-            "total_gb": total_b / (1024 * 1024 * 1024),
-            "used_gb": used_b / (1024 * 1024 * 1024),
-            "free_gb": avail_b / (1024 * 1024 * 1024),
-            "usage_percent": (used_b as f64 / total_b as f64) * 100.0,
-            "workspace_gb": workspace_bytes as f64 / (1024.0 * 1024.0 * 1024.0)
-        })
-    }
-
-    pub fn generate_report(&self, changes: &serde_json::Value, git: &serde_json::Value, disk: &serde_json::Value) -> String {
-        let mut lines = Vec::new();
-        lines.push("=== PROJECT SENTRY DAILY REPORT ===".to_string());
+    fn format_report(&self, findings: &[AuditFinding], recommendations: &[AuditRecommendation]) -> String {
+        let mut lines = vec![];
+        lines.push("=== PROJECT SENTRY AUDIT REPORT ===".to_string());
         lines.push(format!("Date: {}", Local::now().format("%Y-%m-%d %H:%M:%S")));
         lines.push(format!("Workspace: {}", self.workspace.display()));
         lines.push("".to_string());
 
-        lines.push("[SUMMARY]".to_string());
-        let churn = changes["churn"].as_u64().unwrap_or(0);
-        let churn_level = if churn > 20 { "HIGH" } else if churn > 5 { "MEDIUM" } else { "LOW" };
-        lines.push(format!("File changes: +{} ~{} -{}   (Churn: {})", 
-            changes["created"].as_array().map(|a| a.len()).unwrap_or(0),
-            changes["modified"].as_array().map(|a| a.len()).unwrap_or(0),
-            changes["deleted"].as_array().map(|a| a.len()).unwrap_or(0),
-            churn_level));
-
-        if git["available"].as_bool().unwrap_or(false) {
-            let status = if git["clean"].as_bool().unwrap_or(false) { "CLEAN" } else { "DIRTY" };
-            lines.push(format!("Git status: {} (branch: {})", status, git["branch"].as_str().unwrap_or("")));
-        }
-
-        let usage_percent = disk["usage_percent"].as_f64().unwrap_or(0.0);
-        let disk_status = if usage_percent > 80.0 { "WARNING" } else { "OK" };
-        lines.push(format!("Disk usage: {:.0}% ({})", usage_percent, disk_status));
-        lines.append(&mut vec!["".to_string(), "[FILESYSTEM]".to_string()]);
-        
-        lines.push(format!("Created: {}", changes["created"].as_array().map(|a| a.len()).unwrap_or(0)));
-        lines.push(format!("Modified: {}", changes["modified"].as_array().map(|a| a.len()).unwrap_or(0)));
-        lines.push(format!("Deleted: {}", changes["deleted"].as_array().map(|a| a.len()).unwrap_or(0)));
-        lines.push(format!("Size delta: {:+.1} MB", changes["total_delta_mb"].as_f64().unwrap_or(0.0)));
-
-        if let Some(created) = changes["created"].as_array() {
-            if !created.is_empty() {
-                lines.push("Top created:".to_string());
-                for f in created.iter().take(3) {
-                    lines.push(format!("  - {}", f.as_str().unwrap_or("")));
-                }
+        lines.push("[FINDINGS]".to_string());
+        if findings.is_empty() {
+            lines.push("- No significant findings.".to_string());
+        } else {
+            for f in findings {
+                let prefix = match f.severity.as_str() {
+                    "critical" => "🚨 [CRITICAL]",
+                    "warning" => "⚠️ [WARNING]",
+                    "info" => "ℹ️ [INFO]",
+                    _ => "✅ [OK]",
+                };
+                lines.push(format!("{} {}: {}", prefix, f.title, f.message));
             }
         }
         lines.push("".to_string());
 
-        if git["available"].as_bool().unwrap_or(false) {
-            lines.push("[GIT]".to_string());
-            lines.push(format!("Branch: {}", git["branch"].as_str().unwrap_or("")));
-            lines.push(format!("Modified: {}", git["modified"]));
-            lines.push(format!("Staged: {}", git["staged"]));
-            lines.push(format!("Untracked: {}", git["untracked"]));
-            lines.push(format!("Last commit: {} ({})", git["commit_age"].as_str().unwrap_or(""), git["last_commit"].as_str().unwrap_or("")));
-            lines.push("".to_string());
-        }
-
-        lines.push("[RESOURCES]".to_string());
-        lines.push(format!("Disk: {}G total / {}G free ({:.0}%)", 
-            disk["total_gb"], disk["free_gb"], usage_percent));
-        lines.push(format!("Workspace size: {:.1}G", disk["workspace_gb"].as_f64().unwrap_or(0.0)));
-        lines.push("".to_string());
-
-        let mut alerts = Vec::new();
-        if git["available"].as_bool().unwrap_or(false) && !git["clean"].as_bool().unwrap_or(false) {
-            alerts.push("Uncommitted changes present");
-        }
-        if usage_percent > 80.0 {
-            alerts.push("Disk usage above 80%");
-        }
-        if churn > 50 {
-            alerts.push("High file churn detected");
-        }
-
-        if !alerts.is_empty() {
-            lines.push("[ALERTS]".to_string());
-            for alert in alerts {
-                lines.push(format!("- {}", alert));
-            }
-            lines.push("".to_string());
-        }
-
-        let mut actions = Vec::new();
-        if git["available"].as_bool().unwrap_or(false) && !git["clean"].as_bool().unwrap_or(false) {
-            actions.push("Commit or stash working tree");
-        }
-        if usage_percent > 80.0 {
-            actions.push("Review disk usage and clean up old files");
-        }
-
-        if !actions.is_empty() {
+        if !recommendations.is_empty() {
             lines.push("[RECOMMENDED ACTIONS]".to_string());
-            for action in actions {
-                lines.push(format!("- {}", action));
+            for r in recommendations {
+                lines.push(format!("- {}", r.action));
             }
             lines.push("".to_string());
         }
@@ -269,15 +173,140 @@ impl SentryAudit {
         lines.push("Roger. Over.".to_string());
         lines.join("\n")
     }
+}
 
-    pub fn run(&mut self) -> String {
-        self.load_previous_state();
-        self.scan_filesystem();
-        let changes = self.analyze_changes();
-        let git = self.get_git_status();
-        let disk = self.get_disk_usage();
-        let report = self.generate_report(&changes, &git, &disk);
-        self.save_current_state();
-        report
+// --- Specific Rules ---
+
+struct MemoryRule;
+impl AuditRule for MemoryRule {
+    fn run(&self, _ctx: &SentryAudit) -> (Vec<AuditFinding>, Vec<AuditRecommendation>) {
+        use sysinfo::System;
+        let mut sys = System::new_all();
+        sys.refresh_memory();
+
+        let total = sys.total_memory();
+        let used = sys.used_memory();
+        let pct = (used as f64 / total as f64) * 100.0;
+        
+        let total_gb = total as f64 / (1024.0 * 1024.0 * 1024.0);
+        let used_gb = used as f64 / (1024.0 * 1024.0 * 1024.0);
+
+        let mut findings = vec![];
+        let mut recs = vec![];
+
+        let severity = if pct > 80.0 { "critical" } 
+                      else if pct > 60.0 { "warning" } 
+                      else { "OK" };
+
+        findings.push(AuditFinding {
+            title: "Memory Usage".into(),
+            message: format!("{:.1}% used ({:.1}GB/{:.1}GB)", pct, used_gb, total_gb),
+            severity: severity.into(),
+        });
+
+        if pct > 60.0 {
+            recs.push(AuditRecommendation { action: "Check for memory leaks or close unused applications.".into() });
+        }
+
+        (findings, recs)
     }
 }
+
+struct DiskRule;
+impl AuditRule for DiskRule {
+    fn run(&self, ctx: &SentryAudit) -> (Vec<AuditFinding>, Vec<AuditRecommendation>) {
+        let mut findings = vec![];
+        let mut recs = vec![];
+
+        // Reuse central storage logic logic
+        if let Some(stats) = crate::storage::get_disk_usage(ctx.workspace.to_str().unwrap_or("/")) {
+             let severity = if stats.usage_pct > 90.0 { "critical" } 
+                           else if stats.usage_pct > 85.0 { "warning" } 
+                           else { "OK" };
+            
+            findings.push(AuditFinding {
+                title: "Disk Usage".into(),
+                message: format!("{:.1}% used ({:.1}GB/{:.1}GB)", stats.usage_pct, stats.used as f64 / 1e9, stats.total as f64 / 1e9),
+                severity: severity.into(),
+            });
+
+            if stats.usage_pct > 85.0 {
+                recs.push(AuditRecommendation { action: "Run disk cleanup to free up space.".into() });
+            }
+        } else {
+             findings.push(AuditFinding {
+                title: "Disk Detection".into(),
+                message: "Could not identify primary workspace partition.".into(),
+                severity: "warning".into(),
+            });
+        }
+
+        (findings, recs)
+    }
+}
+
+struct GitRule;
+impl AuditRule for GitRule {
+    fn run(&self, ctx: &SentryAudit) -> (Vec<AuditFinding>, Vec<AuditRecommendation>) {
+        let mut findings = vec![];
+        let mut recs = vec![];
+
+        if !ctx.workspace.join(".git").exists() {
+            return (findings, recs);
+        }
+
+        let status_out = Command::new("git").arg("status").arg("--porcelain").current_dir(&ctx.workspace).output().ok()
+            .map(|o| String::from_utf8_lossy(&o.stdout).to_string()).unwrap_or_default();
+
+        if !status_out.is_empty() {
+            let lines: Vec<&str> = status_out.lines().collect();
+            findings.push(AuditFinding {
+                title: "Git Working Tree".into(),
+                message: format!("{} uncommitted changes detected.", lines.len()),
+                severity: "warning".into(),
+            });
+            recs.push(AuditRecommendation { action: "Commit or stash your current changes.".into() });
+        } else {
+            findings.push(AuditFinding {
+                title: "Git Status".into(),
+                message: "Working tree is clean.".into(),
+                severity: "OK".into(),
+            });
+        }
+
+        (findings, recs)
+    }
+}
+
+struct ChurnRule;
+impl AuditRule for ChurnRule {
+    fn run(&self, ctx: &SentryAudit) -> (Vec<AuditFinding>, Vec<AuditRecommendation>) {
+        let mut findings = vec![];
+        
+        let current_keys: HashSet<_> = ctx.current_snapshot.keys().collect();
+        let previous_keys: HashSet<_> = ctx.previous_snapshot.keys().collect();
+
+        let created = current_keys.difference(&previous_keys).count();
+        let deleted = previous_keys.difference(&current_keys).count();
+        let mut modified = 0;
+
+        for key in current_keys.intersection(&previous_keys) {
+            if ctx.current_snapshot.get(*key) != ctx.previous_snapshot.get(*key) {
+                modified += 1;
+            }
+        }
+
+        let churn = created + deleted + modified;
+        if churn > 0 {
+            let severity = if churn > 50 { "warning" } else { "info" };
+            findings.push(AuditFinding {
+                title: "File Churn".into(),
+                message: format!("{} changes since last audit (+{} ~{} -{}).", churn, created, modified, deleted),
+                severity: severity.into(),
+            });
+        }
+
+        (findings, vec![])
+    }
+}
+

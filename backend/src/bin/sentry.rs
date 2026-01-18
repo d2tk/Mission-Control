@@ -8,12 +8,12 @@ fn main() {
     let mut sentry = SentryAudit::new();
 
     if args.contains(&"--once".to_string()) {
-        let report = sentry.run();
+        let report = sentry.run(true);
         println!("{}", report);
     } else {
         println!("Starting Sentry Audit Daemon (Rust)...");
         loop {
-            let report = sentry.run();
+            let report = sentry.run(false);
             println!("{}", report);
             thread::sleep(Duration::from_secs(60));
         }

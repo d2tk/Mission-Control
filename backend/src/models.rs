@@ -28,6 +28,8 @@ pub struct MissionState {
 pub struct SystemStatus {
     pub name: String,
     pub status: String,
+    pub category: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

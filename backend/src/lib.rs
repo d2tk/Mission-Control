@@ -2,7 +2,10 @@ pub mod models;
 pub mod storage;
 pub mod api;
 pub mod sentry;
-pub mod bridge;
+pub mod automation;
+pub mod system;
+pub mod handle_docs;
+
 
 use axum::{
     routing::{get, post},
@@ -16,8 +19,8 @@ pub async fn run_server() {
         .route("/api/messages", get(api::get_messages).post(api::post_message))
         .route("/api/state", get(api::get_state).post(api::post_state))
         .route("/api/dashboard", get(api::get_dashboard).post(api::post_dashboard))
-        .route("/api/docs", get(api::get_docs).post(api::post_docs).delete(api::delete_doc))
-        .route("/api/docs/content", get(api::get_docs_content))
+        .route("/api/docs", get(handle_docs::get_docs).post(handle_docs::post_docs).delete(handle_docs::delete_doc))
+        .route("/api/docs/content", get(handle_docs::get_docs_content))
         .route("/api/disk/cleanup", get(api::get_cleanup_candidates).post(api::post_cleanup))
         .route("/api/shutdown", post(api::post_shutdown))
         .layer(CorsLayer::permissive());

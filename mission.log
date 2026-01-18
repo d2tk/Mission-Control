@@ -1,0 +1,137 @@
+nohup: ignoring input
+🚀 Initiating Mission Launch Sequence (OPB)...
+============================================
+⚙️  Starting Rust Backend Core...
+   [Building Rust Binaries...]
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:14
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |              ^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:39
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |                                       ^^^^^^^^^
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:51:13
+   |
+51 |         rng.gen_range(1000..2500)
+   |             ^^^^^^^^^
+
+   → Server Module (PID: 50067)
+   → Bridge Module (PID: 50068)
+   → Sentry Module (PID: 50069)
+⏳ Waiting for core services to stabilize...
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Blocking waiting for file lock on build directory
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:14
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |              ^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:39
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |                                       ^^^^^^^^^
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:51:13
+   |
+51 |         rng.gen_range(1000..2500)
+   |             ^^^^^^^^^
+
+warning: `backend` (lib) generated 3 warnings
+    Finished `release` profile [optimized] target(s) in 0.26s
+     Running `target/release/bridge`
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:14
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |              ^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:39
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |                                       ^^^^^^^^^
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:51:13
+   |
+51 |         rng.gen_range(1000..2500)
+   |             ^^^^^^^^^
+
+warning: `backend` (lib) generated 3 warnings
+    Finished `release` profile [optimized] target(s) in 0.29s
+🚀 BridgeManager operational (Actor Edition).
+     Running `target/release/sentry`
+Starting Sentry Audit Daemon (Rust)...
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:14
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |              ^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:30:39
+   |
+30 |         (rng.gen_range(300..900), rng.gen_range(500..1200))
+   |                                       ^^^^^^^^^
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+  --> src/automation/agents/chatgpt.rs:51:13
+   |
+51 |         rng.gen_range(1000..2500)
+   |             ^^^^^^^^^
+
+warning: `backend` (lib) generated 3 warnings
+    Finished `release` profile [optimized] target(s) in 0.31s
+     Running `target/release/server`
+=== PROJECT SENTRY AUDIT REPORT ===
+Date: 2026-01-18 13:30:37
+Workspace: /home/a2/Desktop/gem
+
+[FINDINGS]
+⚠️ [WARNING] Disk Usage: 83.4% used (833.6GB/999.1GB) on /home
+ℹ️ [INFO] File Churn: 10 changes since last audit (+0 ~5 -5).
+
+[RECOMMENDED ACTIONS]
+- Run disk cleanup to free up space.
+
+Roger. Over.
+Serving Mission Control Server at http://0.0.0.0:8000
+✅ Initial state synchronized.
+🌐 Starting Mission Control Interface...
+   → Frontend Interface launched (PID: 50135)
+============================================
+✅ Operational (Server + Bridge Mode).
+   Access Mission Control at: http://localhost:4321
+   (Press Ctrl+C to shutdown)
+============================================
+
+> opb@0.0.1 dev
+> astro dev --host
+
