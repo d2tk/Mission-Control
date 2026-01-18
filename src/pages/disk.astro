@@ -1,0 +1,412 @@
+---
+import "../styles/global.css";
+
+const currentTime = new Date().toLocaleString("en-US", {
+    timeZone: "Asia/Seoul",
+    dateStyle: "full",
+    timeStyle: "short",
+});
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <title>Disk Manager | Mission Control</title>
+        <script is:inline>
+            const savedTheme = localStorage.getItem("theme");
+            const root = document.documentElement;
+            if (savedTheme === "dark") {
+                root.setAttribute("data-theme", "dark");
+            } else {
+                root.setAttribute("data-theme", "light");
+                if (!savedTheme) localStorage.setItem("theme", "light");
+            }
+        </script>
+        <style>
+            .gauge-container {
+                width: 100%;
+                height: 14px;
+                background: var(--bg-tertiary);
+                border-radius: 20px;
+                overflow: hidden;
+                border: 1px solid var(--border-primary);
+                margin: 0.75rem 0;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+            .gauge-fill {
+                height: 100%;
+                background: var(--accent-primary);
+                transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                border-radius: 20px;
+                box-shadow: 0 0 12px rgba(36, 131, 123, 0.2);
+            }
+            .gauge-fill.warning {
+                background: #eab308;
+            }
+            .gauge-fill.critical {
+                background: #e02424;
+            }
+
+            .cleanup-card {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem;
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-secondary);
+                border-radius: 8px;
+                margin-bottom: 0.75rem;
+            }
+            .metric-value {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--text-primary);
+            }
+            .metric-label {
+                color: var(--text-tertiary);
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header
+                style="padding: 2rem 0; border-bottom: 1px solid var(--border-primary);"
+            >
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center;"
+                >
+                    <div>
+                        <h1
+                            style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.75rem;"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="32"
+                                height="32"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--accent-primary)"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><path
+                                    d="M21 20V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14"
+                                ></path><path
+                                    d="M11 20c-1.7 0-3-1.3-3-3V7c0-1.7 1.3-3 3-3"
+                                ></path><path
+                                    d="M15 20c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3"
+                                ></path><line x1="3" x2="21" y1="12" y2="12"
+                                ></line><line x1="3" x2="21" y1="16" y2="16"
+                                ></line></svg
+                            >
+                            <span
+                                style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"
+                                >Disk Manager</span
+                            >
+                        </h1>
+                        <p style="margin: 0; color: var(--text-tertiary);">
+                            Storage Health & Lifecycle control
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="/" class="btn btn-secondary"
+                            >Back to Mission Control</a
+                        >
+                    </div>
+                </div>
+            </header>
+
+            <main style="padding: 2rem 0;">
+                <!-- Stats Overview -->
+                <div class="grid grid-3" style="margin-bottom: 2rem;">
+                    <div class="card">
+                        <div class="metric-label">Total Capacity</div>
+                        <div class="metric-value" id="total-disk">-- GB</div>
+                    </div>
+                    <div class="card">
+                        <div class="metric-label">Usage</div>
+                        <div class="metric-value" id="usage-pct">-- %</div>
+                        <div class="gauge-container">
+                            <div
+                                id="usage-gauge"
+                                class="gauge-fill"
+                                style="width: 0%"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="metric-label">Workspace Size</div>
+                        <div class="metric-value" id="workspace-size">
+                            -- GB
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts -->
+                <div
+                    id="disk-alert"
+                    style="display: none; background: rgba(224, 36, 36, 0.1); border: 1px solid #e02424; color: #e02424; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        ><circle cx="12" cy="12" r="10"></circle><line
+                            x1="12"
+                            x2="12"
+                            y1="8"
+                            y2="12"></line><line
+                            x1="12"
+                            x2="12.01"
+                            y1="16"
+                            y2="16"></line></svg
+                    >
+                    <strong
+                        >ALERTS: Disk usage above 80%! Cleanup highly
+                        recommended.</strong
+                    >
+                </div>
+
+                <div class="grid grid-2">
+                    <!-- Cleanup Candidates -->
+                    <section>
+                        <h2
+                            style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--accent-primary)"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><path d="M3 6h18"></path><path
+                                    d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+                                ></path><path
+                                    d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+                                ></path><line x1="10" x2="10" y1="11" y2="17"
+                                ></line><line x1="14" x2="14" y1="11" y2="17"
+                                ></line></svg
+                            >
+                            Cleanup Candidates
+                        </h2>
+                        <div id="cleanup-list">
+                            <p style="color: var(--text-tertiary);">
+                                Scanning for old files...
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- Storage Breakdown -->
+                    <section>
+                        <h2
+                            style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--accent-primary)"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><path d="M21.21 15.89A10 10 0 1 1 8 2.83"
+                                ></path><path d="M22 12A10 10 0 0 0 12 2v10z"
+                                ></path></svg
+                            >
+                            Distribution
+                        </h2>
+                        <div class="card" style="height: auto;">
+                            <div
+                                style="display: flex; flex-direction: column; gap: 1rem;"
+                            >
+                                <div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"
+                                    >
+                                        <span>Root FS (used)</span>
+                                        <span id="root-val">-- GB</span>
+                                    </div>
+                                    <div class="gauge-container">
+                                        <div
+                                            id="root-bar"
+                                            class="gauge-fill"
+                                            style="width: 0%"
+                                        >
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"
+                                    >
+                                        <span>Mission Workspace</span>
+                                        <span id="ws-val">-- GB</span>
+                                    </div>
+                                    <div class="gauge-container">
+                                        <div
+                                            id="ws-bar"
+                                            class="gauge-fill"
+                                            style="width: 0%; background: var(--accent-secondary);"
+                                        >
+                                        </div>
+                                    </div>
+                                </div>
+                                <p
+                                    style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 1rem;"
+                                >
+                                    Note: Workspace size includes all local
+                                    agent memory, logs, and brain artifacts.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+
+            <footer
+                style="padding: 2rem 0; border-top: 1px solid var(--border-primary); margin-top: 3rem; text-align: center; color: var(--text-tertiary);"
+            >
+                <p>Mission Control Storage Utility | {currentTime}</p>
+            </footer>
+        </div>
+
+        <script is:inline>
+            const API_DASHBOARD = "http://localhost:8000/api/dashboard";
+            const API_CLEANUP = "http://localhost:8000/api/disk/cleanup";
+
+            const formatBytes = (bytes) => {
+                if (bytes === 0) return "0 GB";
+                const k = 1024;
+                const sizes = ["B", "KB", "MB", "GB", "TB"];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                // We target GB mostly for disk stats
+                return parseFloat((bytes / Math.pow(k, 3)).toFixed(2)) + " GB";
+            };
+
+            const fetchStats = async () => {
+                try {
+                    const res = await fetch(API_DASHBOARD);
+                    const data = await res.json();
+                    if (data.disk) {
+                        const d = data.disk;
+                        document.getElementById("total-disk").textContent =
+                            formatBytes(d.total);
+                        document.getElementById("usage-pct").textContent =
+                            d.usage_pct.toFixed(1) + "%";
+                        document.getElementById("workspace-size").textContent =
+                            formatBytes(d.workspace_size);
+
+                        const gauge = document.getElementById("usage-gauge");
+                        gauge.style.width = d.usage_pct + "%";
+                        gauge.className =
+                            "gauge-fill " +
+                            (d.usage_pct > 80
+                                ? "critical"
+                                : d.usage_pct > 60
+                                  ? "warning"
+                                  : "");
+
+                        document.getElementById("disk-alert").style.display =
+                            d.usage_pct > 80 ? "flex" : "none";
+
+                        // Breakdown
+                        document.getElementById("root-val").textContent =
+                            formatBytes(d.used);
+                        document.getElementById("root-bar").style.width =
+                            (d.used / d.total) * 100 + "%";
+                        document.getElementById("ws-val").textContent =
+                            formatBytes(d.workspace_size);
+                        document.getElementById("ws-bar").style.width =
+                            (d.workspace_size / d.total) * 100 * 10 + "%"; // Scale WS bar for visibility
+                    }
+                } catch (e) {
+                    console.error("Fetch disk stats failed:", e);
+                }
+            };
+
+            const fetchCleanup = async () => {
+                try {
+                    const res = await fetch(API_CLEANUP);
+                    const items = await res.json();
+                    renderCleanup(items);
+                } catch (e) {
+                    console.error("Fetch cleanup failed:", e);
+                }
+            };
+
+            const renderCleanup = (items) => {
+                const list = document.getElementById("cleanup-list");
+                if (items.length === 0) {
+                    list.innerHTML =
+                        '<div class="card"><p>✅ No cleanup candidates found.</p></div>';
+                    return;
+                }
+                list.innerHTML = items
+                    .map(
+                        (item) => `
+              <div class="cleanup-card">
+                  <div>
+                      <div style="font-weight: bold; color: var(--text-primary);">${item.name}</div>
+                      <div style="font-size: 0.75rem; color: var(--text-tertiary); max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${item.path}</div>
+                      <span class="status status-info" style="font-size: 0.7rem; margin-top: 0.4rem; display: inline-block;">${item.category}</span>
+                  </div>
+                  <div style="text-align: right;">
+                      <div style="margin-bottom: 0.5rem; font-family: monospace;">${formatBytes(item.size)}</div>
+                      <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--accent-error); color: var(--accent-error);" onclick="runCleanup('${item.path}', '${item.category}')">
+                          Clean
+                      </button>
+                  </div>
+              </div>
+          `,
+                    )
+                    .join("");
+            };
+
+            window.runCleanup = async (path, category) => {
+                if (!confirm(`Are you sure you want to clean up ${path}?`))
+                    return;
+                try {
+                    const res = await fetch(API_CLEANUP, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ path, category }),
+                    });
+                    const result = await res.json();
+                    if (result.status === "ok") {
+                        alert("Cleanup successful!");
+                        fetchCleanup();
+                        fetchStats();
+                    } else {
+                        alert("Error: " + JSON.stringify(result));
+                    }
+                } catch (e) {
+                    alert("Cleanup failed: " + e);
+                }
+            };
+
+            fetchStats();
+            fetchCleanup();
+            setInterval(fetchStats, 5000);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,549 @@
+---
+import "../styles/global.css";
+
+const currentTime = new Date().toLocaleString("en-US", {
+    timeZone: "Asia/Seoul",
+    dateStyle: "full",
+    timeStyle: "short",
+});
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <meta
+            name="description"
+            content="Mission Control - Documentation & Reports"
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <title>Documentation & Reports | Mission Control</title>
+        <script is:inline>
+            // Theme Init (Blocking to prevent FOUC)
+            const savedTheme = localStorage.getItem("theme");
+            const root = document.documentElement;
+            // Default to light if no preference or if preference is light
+            if (savedTheme === "light" || !savedTheme) {
+                root.setAttribute("data-theme", "light");
+                if (!savedTheme) localStorage.setItem("theme", "light");
+            } else {
+                root.setAttribute("data-theme", "dark");
+            }
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+        ></script>
+    </head>
+    <body>
+        <div class="container">
+            <!-- Header -->
+            <header
+                style="padding: 2rem 0; border-bottom: 1px solid var(--border-primary);"
+            >
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;"
+                >
+                    <div>
+                        <h1
+                            style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.75rem;"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="32"
+                                height="32"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--accent-primary)"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-file-text"
+                            >
+                                <path
+                                    d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                                ></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" x2="8" y1="13" y2="13"></line>
+                                <line x1="16" x2="8" y1="17" y2="17"></line>
+                                <line x1="10" x2="8" y1="9" y2="9"></line>
+                            </svg>
+                            <span
+                                style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"
+                                >Documentation & Reports</span
+                            >
+                        </h1>
+                        <p style="margin: 0; color: var(--text-tertiary);">
+                            {currentTime}
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <a
+                            href="/"
+                            class="btn btn-secondary"
+                            style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; text-decoration: none;"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><path d="m12 19-7-7 7-7"></path><path
+                                    d="M19 12H5"></path></svg
+                            >
+                            Back to Dashboard
+                        </a>
+                        <button
+                            id="theme-toggle"
+                            class="btn btn-secondary"
+                            style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"
+                            aria-label="Toggle theme"
+                        >
+                            <span class="icon-sun">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    ><circle cx="12" cy="12" r="5"
+                                    ></circle><path d="M12 1v2"></path><path
+                                        d="M12 21v2"></path><path
+                                        d="M4.22 4.22l1.42 1.42"></path><path
+                                        d="M18.36 18.36l1.42 1.42"></path><path
+                                        d="M1 12h2"></path><path d="M21 12h2"
+                                    ></path><path d="M4.22 19.78l1.42-1.42"
+                                    ></path><path d="M18.36 5.64l1.42-1.42"
+                                    ></path></svg
+                                >
+                            </span>
+                            <span class="icon-moon" style="display: none;">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    ><path
+                                        d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                                    ></path></svg
+                                >
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main style="padding: 2rem 0;">
+                <section class="fade-in">
+                    <div class="card">
+                        <!-- Registration Form with Drag & Drop -->
+                        <div
+                            id="drop-zone"
+                            style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; border: 2px dashed var(--border-secondary); border-radius: 8px; background: var(--bg-secondary); transition: all 0.3s ease;"
+                        >
+                            <div
+                                style="text-align: center; color: var(--text-secondary);"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="32"
+                                    height="32"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    style="margin: 0 auto 0.5rem; opacity: 0.5;"
+                                >
+                                    <path
+                                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                    ></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" x2="12" y1="3" y2="15"></line>
+                                </svg>
+                                <p style="margin: 0; font-size: 0.9rem;">
+                                    Drag & drop .md or .json file here or use
+                                    the input below
+                                </p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input
+                                    type="text"
+                                    id="doc-path-input"
+                                    placeholder="/absolute/path/to/file.md"
+                                    style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-secondary); background: var(--bg-primary); color: var(--text-primary);"
+                                />
+                                <button
+                                    id="register-doc-btn"
+                                    class="btn btn-primary">Register</button
+                                >
+                            </div>
+                        </div>
+
+                        <div
+                            style="display: grid; grid-template-columns: 250px 1fr; gap: 2rem;"
+                        >
+                            <!-- Doc List -->
+                            <div
+                                style="border-right: 1px solid var(--border-primary); padding-right: 1rem;"
+                            >
+                                <h3
+                                    style="margin-top: 0; font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;"
+                                >
+                                    Registered Files
+                                </h3>
+                                <div
+                                    id="doc-list"
+                                    style="display: flex; flex-direction: column; gap: 0.5rem;"
+                                >
+                                    <p
+                                        style="color: var(--text-tertiary); font-size: 0.9rem;"
+                                    >
+                                        No documents registered.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Doc Content -->
+                            <div>
+                                <div
+                                    id="doc-viewer"
+                                    class="markdown-body"
+                                    style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-secondary); min-height: 300px; color: var(--text-primary); overflow-x: auto;"
+                                >
+                                    <p style="color: var(--text-tertiary);">
+                                        Select a document to view contents.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Footer -->
+            <footer
+                style="padding: 2rem 0; border-top: 1px solid var(--border-primary); margin-top: 3rem;"
+            >
+                <div
+                    style="text-align: center; color: var(--text-tertiary); font-size: 0.875rem;"
+                >
+                    <p style="margin: 0;">
+                        Mission Control v1.0 | Multi-Agent Command Center
+                    </p>
+                    <p style="margin: 0.5rem 0 0 0;">
+                        Powered by Astro + Flexoki Theme
+                    </p>
+                </div>
+            </footer>
+        </div>
+
+        <script is:inline>
+            // --- Documentation Logic ---
+            const docInput = document.getElementById("doc-path-input");
+            const registerBtn = document.getElementById("register-doc-btn");
+            const docList = document.getElementById("doc-list");
+            const docViewer = document.getElementById("doc-viewer");
+
+            // Load docs list
+            const fetchDocs = async () => {
+                try {
+                    const res = await fetch("http://localhost:8000/api/docs");
+                    const data = await res.json();
+                    if (data && data.docs) {
+                        renderDocList(data.docs);
+                    }
+                } catch (e) {
+                    console.error("Fetch docs error:", e);
+                }
+            };
+
+            // Render List
+            const renderDocList = (docs) => {
+                if (!docs || docs.length === 0) {
+                    docList.innerHTML =
+                        '<p style="color: var(--text-tertiary);">No documents registered.</p>';
+                    return;
+                }
+                docList.innerHTML = docs
+                    .map(
+                        (doc) => `
+              <div style="display: flex; gap: 0.25rem; align-items: center; margin-bottom: 0.5rem;">
+                <button class="btn btn-secondary" onclick="viewDoc('${doc.path}')" style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+                    📄 ${doc.path.split("/").pop()}
+                </button>
+                <button onclick="deleteDoc('${doc.path}')" style="background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.color='var(--accent-error)'; this.style.background='var(--bg-tertiary)'" onmouseout="this.style.color='var(--text-tertiary)'; this.style.background='none'">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
+          `,
+                    )
+                    .join("");
+            };
+
+            // View Doc
+            window.viewDoc = async (path) => {
+                docViewer.innerHTML = "<p>Loading contents...</p>";
+                try {
+                    const res = await fetch(
+                        `http://localhost:8000/api/docs/content?path=${encodeURIComponent(path)}`,
+                    );
+                    const text = await res.text();
+
+                    // Check file extension
+                    if (path.endsWith(".json")) {
+                        // Pretty print JSON
+                        try {
+                            const jsonObj = JSON.parse(text);
+                            const prettyJson = JSON.stringify(jsonObj, null, 2);
+                            docViewer.innerHTML = `<pre style="margin: 0; overflow-x: auto;"><code>${escapeHtml(prettyJson)}</code></pre>`;
+                        } catch (e) {
+                            // If JSON parsing fails, show as plain text
+                            docViewer.innerHTML = `<pre style="margin: 0; overflow-x: auto;"><code>${escapeHtml(text)}</code></pre>`;
+                        }
+                    } else {
+                        // Render as markdown
+                        docViewer.innerHTML = marked.parse(text);
+                    }
+                } catch (e) {
+                    docViewer.innerHTML = `<p style="color: var(--accent-error);">Error loading file: ${e}</p>`;
+                }
+            };
+
+            // Helper function to escape HTML
+            function escapeHtml(text) {
+                const div = document.createElement("div");
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Delete Doc
+            window.deleteDoc = async (path) => {
+                if (
+                    !confirm(
+                        "Are you sure you want to unregister this document?",
+                    )
+                )
+                    return;
+                try {
+                    const res = await fetch(
+                        `http://localhost:8000/api/docs?path=${encodeURIComponent(path)}`,
+                        {
+                            method: "DELETE",
+                        },
+                    );
+                    if (res.ok) {
+                        fetchDocs();
+                        docViewer.innerHTML =
+                            '<p style="color: var(--text-tertiary);">Select a document to view contents.</p>';
+                    } else {
+                        alert("Failed to delete document registration");
+                    }
+                } catch (e) {
+                    console.error("Delete error:", e);
+                }
+            };
+
+            // Register Doc
+            if (registerBtn) {
+                registerBtn.addEventListener("click", async () => {
+                    const path = docInput.value.trim();
+                    if (!path) return;
+
+                    try {
+                        const res = await fetch(
+                            "http://localhost:8000/api/docs",
+                            {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    path: path,
+                                    added: new Date().toISOString(),
+                                }),
+                            },
+                        );
+                        if (res.ok) {
+                            docInput.value = "";
+                            fetchDocs(); // Refresh list
+                        } else {
+                            alert("Failed to register document");
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert("Error registering document");
+                    }
+                });
+            }
+
+            // Initial load
+            fetchDocs();
+
+            // --- Drag and Drop Support ---
+            const dropZone = document.getElementById("drop-zone");
+
+            if (dropZone) {
+                // Prevent default drag behaviors
+                ["dragenter", "dragover", "dragleave", "drop"].forEach(
+                    (eventName) => {
+                        dropZone.addEventListener(
+                            eventName,
+                            (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            },
+                            false,
+                        );
+                    },
+                );
+
+                // Highlight drop zone when item is dragged over it
+                ["dragenter", "dragover"].forEach((eventName) => {
+                    dropZone.addEventListener(
+                        eventName,
+                        () => {
+                            dropZone.style.borderColor =
+                                "var(--accent-primary)";
+                            dropZone.style.background = "var(--bg-tertiary)";
+                        },
+                        false,
+                    );
+                });
+
+                ["dragleave", "drop"].forEach((eventName) => {
+                    dropZone.addEventListener(
+                        eventName,
+                        () => {
+                            dropZone.style.borderColor =
+                                "var(--border-secondary)";
+                            dropZone.style.background = "var(--bg-secondary)";
+                        },
+                        false,
+                    );
+                });
+
+                // Handle dropped files
+                dropZone.addEventListener(
+                    "drop",
+                    async (e) => {
+                        const dt = e.dataTransfer;
+                        const files = dt.files;
+
+                        if (files.length > 0) {
+                            const file = files[0];
+
+                            // Check if it's a supported file
+                            if (
+                                !file.name.endsWith(".md") &&
+                                !file.name.endsWith(".json")
+                            ) {
+                                alert("Please drop a .md or .json file");
+                                return;
+                            }
+
+                            // Get file path - Note: browser security restricts full path access
+                            // We'll use the file name and let user confirm/edit the path
+                            const fileName = file.name;
+
+                            // Try to read file path if available (works in some browsers with special APIs)
+                            let filePath = file.path || "";
+
+                            if (!filePath) {
+                                // Fallback: ask user to confirm the path
+                                filePath = prompt(
+                                    `Please enter the full path for "${fileName}":`,
+                                    `/home/a2/Desktop/gem/opb/backend/${fileName}`,
+                                );
+                            }
+
+                            if (filePath) {
+                                docInput.value = filePath;
+
+                                // Auto-register
+                                try {
+                                    const res = await fetch(
+                                        "http://localhost:8000/api/docs",
+                                        {
+                                            method: "POST",
+                                            headers: {
+                                                "Content-Type":
+                                                    "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                                path: filePath,
+                                                added: new Date().toISOString(),
+                                            }),
+                                        },
+                                    );
+                                    if (res.ok) {
+                                        docInput.value = "";
+                                        fetchDocs();
+                                    } else {
+                                        alert("Failed to register document");
+                                    }
+                                } catch (e) {
+                                    console.error(e);
+                                    alert("Error registering document");
+                                }
+                            }
+                        }
+                    },
+                    false,
+                );
+            }
+        </script>
+        <script is:inline>
+            // Theme toggle handler
+            const toggleBtn = document.getElementById("theme-toggle");
+            if (toggleBtn) {
+                toggleBtn.addEventListener("click", () => {
+                    const root = document.documentElement;
+                    const current = root.getAttribute("data-theme") || "dark";
+                    const newTheme = current === "dark" ? "light" : "dark";
+                    root.setAttribute("data-theme", newTheme);
+                    localStorage.setItem("theme", newTheme);
+                    // swap icons
+                    const sun = document.querySelector(".icon-sun");
+                    const moon = document.querySelector(".icon-moon");
+                    if (newTheme === "light") {
+                        sun.style.display = "inline";
+                        moon.style.display = "none";
+                    } else {
+                        sun.style.display = "none";
+                        moon.style.display = "inline";
+                    }
+                });
+
+                // Sync icons on load
+                const root = document.documentElement;
+                if (root.getAttribute("data-theme") === "dark") {
+                    const sun = document.querySelector(".icon-sun");
+                    const moon = document.querySelector(".icon-moon");
+                    if (sun) sun.style.display = "none";
+                    if (moon) moon.style.display = "inline";
+                }
+            }
+        </script>
+    </body>
+</html>

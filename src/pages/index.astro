@@ -39,6 +39,7 @@ const currentTime = new Date().toLocaleString("en-US", {
         root.setAttribute("data-theme", "dark");
       }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -53,7 +54,26 @@ const currentTime = new Date().toLocaleString("en-US", {
             <h1
               style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.75rem;"
             >
-              <span style="font-size: 1.2em;">📡</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-primary)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-layout-dashboard"
+                ><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect
+                  width="7"
+                  height="5"
+                  x="14"
+                  y="3"
+                  rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"
+                ></rect><rect width="7" height="5" x="3" y="16" rx="1"
+                ></rect></svg
+              >
               <span
                 style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"
                 >Mission Control</span
@@ -104,12 +124,72 @@ const currentTime = new Date().toLocaleString("en-US", {
                 >
               </span>
             </button>
+            <button
+              id="shutdown-btn"
+              class="btn"
+              style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #e02424; border: 2px solid #e02424; transition: all 0.3s ease; cursor: pointer;"
+              aria-label="Shutdown System"
+              title="Shutdown all backend services"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                ><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line
+                  x1="12"
+                  x2="12"
+                  y1="2"
+                  y2="12"></line></svg
+              >
+            </button>
+            <a
+              href="/disk"
+              class="btn btn-secondary"
+              style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; text-decoration: none;"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-database"
+                ><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path
+                  d="M3 5V19A9 3 0 0 0 21 19V5"></path><path
+                  d="M3 12A9 3 0 0 0 21 12"></path></svg
+              >
+              Disk Manager
+            </a>
             <a
               href="/root_control"
               class="btn btn-primary"
               style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; text-decoration: none;"
             >
-              <span>🔐</span> Root Control
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-lock"
+                ><rect width="18" height="11" x="3" y="11" rx="2" ry="2"
+                ></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg
+              >
+              Root Control
             </a>
             <span
               id="global-status-indicator"
@@ -123,155 +203,355 @@ const currentTime = new Date().toLocaleString("en-US", {
             </span>
           </div>
         </div>
-      </header>
 
-      <!-- Main Content -->
-      <main style="padding: 2rem 0;">
-        <!-- Project List -->
-        <section style="margin-bottom: 3rem;" class="fade-in">
-          <h2
-            style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"
-          >
-            <span style="color: var(--text-primary);">🚀</span> Active Projects
-          </h2>
-          <div class="grid grid-2" id="projects-grid">
-            <!-- Populated via JS -->
-            <div class="card"><p>Loading projects...</p></div>
-          </div>
-        </section>
-
-        <!-- System Status Grid -->
-        <section
-          style="margin-bottom: 3rem;"
-          class="fade-in"
-          style="animation-delay: 0.1s;"
-        >
-          <h2
-            style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"
-          >
-            <span style="color: var(--text-primary);">⚙️</span> Core Services
-          </h2>
-          <div class="grid grid-4" id="core-services-grid">
-            <!-- Populated via JS -->
-            <div class="card"><p>Loading system status...</p></div>
-          </div>
-        </section>
-
-        <!-- Recent Activity -->
-        <section class="fade-in" style="animation-delay: 0.4s;">
-          <h2
-            style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"
-          >
-            <span style="color: var(--text-primary);">📡</span> Recent Activity
-          </h2>
-          <div class="card">
-            <div
-              style="display: flex; flex-direction: column; gap: 1rem;"
-              id="recent-activity-list"
+        <!-- Main Content -->
+        <main style="padding: 2rem 0;">
+          <!-- Project List -->
+          <section style="margin-bottom: 3rem;" class="fade-in">
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;"
             >
-              <!-- Populated via JS -->
-              <p>Loading activity...</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Quick Actions -->
-        <section
-          style="margin-top: 3rem;"
-          class="fade-in"
-          style="animation-delay: 0.6s;"
-        >
-          <div
-            class="card"
-            style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-tertiary)); border-color: var(--accent-primary);"
-          >
-            <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-              <div
-                style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.6rem 1.2rem; border-radius: 10px; border: 1px dashed var(--accent-primary); margin-right: 0.5rem;"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-primary)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-rocket"
+                ><path
+                  d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"
+                ></path><path
+                  d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"
+                ></path><path d="M9 12H4s.5-1 1-4c2 0 3 0 4 1z"></path><path
+                  d="M12 15v5s1-.5 4-1c0-1 0-2-1-4z"></path><path d="M15 9l-1 1"
+                ></path></svg
               >
-                <code
-                  style="color: var(--accent-primary); font-weight: bold; font-size: 1.1rem; background: var(--bg-tertiary); padding: 0.2rem 0.5rem; border-radius: 4px;"
-                  >!audit</code
+              Active Projects
+            </h2>
+            <div class="grid grid-2" id="projects-grid">
+              <!-- Populated via JS -->
+              <div class="card"><p>Loading projects...</p></div>
+            </div>
+          </section>
+
+          <!-- System Status Grid -->
+          <section
+            style="margin-bottom: 3rem;"
+            class="fade-in"
+            style="animation-delay: 0.1s;"
+          >
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-primary)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-settings-2"
+                ><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle
+                  cx="17"
+                  cy="17"
+                  r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg
+              >
+            </h2>
+            <div class="grid grid-4" id="core-services-grid">
+              <!-- Populated via JS -->
+              <div class="card"><p>Loading system status...</p></div>
+            </div>
+          </section>
+
+          <!-- Agent Status section -->
+          <section
+            style="margin-bottom: 3rem;"
+            class="fade-in"
+            style="animation-delay: 0.2s;"
+          >
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-primary)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-brain"
+                ><path
+                  d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 1 1 .34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 3.76-1.04A2.5 2.5 0 0 1 9.5 2Z"
+                ></path><path
+                  d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 1 0-.34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-3.76-1.04A2.5 2.5 0 0 0 14.5 2Z"
+                ></path></svg
+              >
+              Agent Intelligence
+            </h2>
+            <div class="grid grid-4" id="agents-grid">
+              <!-- Populated via JS -->
+              <div class="card"><p>Initializing agents...</p></div>
+            </div>
+          </section>
+
+          <!-- Recent Activity -->
+          <section class="fade-in" style="animation-delay: 0.4s;">
+            <h2
+              style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-primary)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-activity"
+                ><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg
+              >
+              Recent Activity
+              <div style="flex: 1;"></div>
+              <button
+                id="toggle-activity-btn"
+                class="btn btn-secondary"
+                style="padding: 0.25rem 0.6rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.4rem;"
+                title="Toggle Activity Panel"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><path
+                    d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z"
+                  ></path><circle cx="12" cy="12" r="3"></circle></svg
                 >
-                <span style="color: var(--text-secondary); font-size: 0.9rem;"
-                  >Run a full system health and workspace audit report.</span
-                >
+                Toggle
+              </button>
+            </h2>
+            <div class="card" id="activity-panel-content">
+              <div
+                style="display: flex; flex-direction: column; gap: 1rem;"
+                id="recent-activity-list"
+              >
+                <!-- Populated via JS -->
+                <p>Loading activity...</p>
               </div>
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
 
-      <!-- Footer -->
-      <footer
-        style="padding: 2rem 0; border-top: 1px solid var(--border-primary); margin-top: 3rem;"
-      >
-        <div
-          style="text-align: center; color: var(--text-tertiary); font-size: 0.875rem;"
+          <!-- Quick Actions -->
+          <section
+            style="margin-top: 3rem;"
+            class="fade-in"
+            style="animation-delay: 0.6s;"
+          >
+            <div
+              class="card"
+              style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-tertiary)); border-color: var(--accent-primary);"
+            >
+              <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <div
+                  style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.6rem 1.2rem; border-radius: 10px; border: 1px dashed var(--accent-primary); margin-right: 0.5rem;"
+                >
+                  <code
+                    style="color: var(--accent-primary); font-weight: bold; font-size: 1.1rem; background: var(--bg-tertiary); padding: 0.2rem 0.5rem; border-radius: 4px;"
+                    >!audit</code
+                  >
+                  <span style="color: var(--text-secondary); font-size: 0.9rem;"
+                    >Run a full system health and workspace audit report.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Documentation & Reports Navigation -->
+          <section
+            style="margin-top: 3rem;"
+            class="fade-in"
+            style="animation-delay: 0.8s;"
+          >
+            <a
+              href="/docs"
+              class="card"
+              style="display: block; text-decoration: none; transition: all 0.3s ease; cursor: pointer;"
+              onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)';"
+              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';"
+            >
+              <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div
+                  style="flex-shrink: 0; width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center;"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                    ></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" x2="8" y1="13" y2="13"></line>
+                    <line x1="16" x2="8" y1="17" y2="17"></line>
+                    <line x1="10" x2="8" y1="9" y2="9"></line>
+                  </svg>
+                </div>
+                <div style="flex: 1;">
+                  <h3
+                    style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.25rem;"
+                  >
+                    Documentation & Reports
+                  </h3>
+                  <p
+                    style="margin: 0; color: var(--text-secondary); font-size: 0.95rem;"
+                  >
+                    View and manage project documentation files
+                  </p>
+                </div>
+                <div style="flex-shrink: 0;">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--accent-primary)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="m9 18 6-6-6-6"></path>
+                  </svg>
+                </div>
+              </div>
+            </a>
+          </section>
+        </main>
+
+        <!-- Footer -->
+        <footer
+          style="padding: 2rem 0; border-top: 1px solid var(--border-primary); margin-top: 3rem;"
         >
-          <p style="margin: 0;">
-            Mission Control v1.0 | Multi-Agent Command Center
-          </p>
-          <p style="margin: 0.5rem 0 0 0;">Powered by Astro + Flexoki Theme</p>
-        </div>
-      </footer>
-    </div>
+          <div
+            style="text-align: center; color: var(--text-tertiary); font-size: 0.875rem;"
+          >
+            <p style="margin: 0;">
+              Mission Control v1.0 | Multi-Agent Command Center
+            </p>
+            <p style="margin: 0.5rem 0 0 0;">
+              Powered by Astro + Flexoki Theme
+            </p>
+          </div>
+        </footer>
+      </header>
 
-    <script>
-      const API_URL = "http://localhost:8000/api/dashboard";
+      <script is:inline>
+        const API_URL = "http://localhost:8000/api/dashboard";
 
-      // Real-time Data Fetching
-      const fetchDashboardData = async () => {
-        try {
-          const res = await fetch(API_URL);
-          const data = await res.json();
+        const ICON_MAP = {
+          "📡": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>`,
+          "🚀": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.5-1 1-4c2 0 3 0 4 1z"/><path d="M12 15v5s1-.5 4-1c0-1 0-2-1-4z"/><path d="M15 9l-1 1"/></svg>`,
+          "⚙️": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>`,
+          "🛡️": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>`,
+          "🌉": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bridge"><path d="M3 21v-4c0-2 1-3 3-3h12c2 0 3 1 3 3v4"/><path d="M3 7h18"/><path d="M6 7v7"/><path d="M18 7v7"/><path d="M12 7v7"/></svg>`,
+          "🖥️": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-monitor"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>`,
+          "🧠": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brain"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 1 1 .34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 3.76-1.04A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 1 0-.34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-3.76-1.04A2.5 2.5 0 0 0 14.5 2Z"/></svg>`,
+          "🎛️": `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-control"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 12h6"/><path d="M15 12h6"/><path d="M12 3v6"/><path d="M12 15v6"/></svg>`,
+        };
 
-          if (data) {
-            renderGlobalStatus(data.all_systems_go);
-            if (data.projects) renderProjects(data.projects);
-            if (data.systems) renderSystems(data.systems);
-            if (data.activities) renderActivity(data.activities);
+        const replaceEmojiWithIcon = (text) => {
+          let newText = text;
+          for (const [emoji, icon] of Object.entries(ICON_MAP)) {
+            if (newText.includes(emoji)) {
+              newText = newText.replace(
+                emoji,
+                `<span class="icon-wrapper" style="display: inline-flex; align-items: center; justify-content: center; width: 1.2em; height: 1.2em; vertical-align: middle; margin-right: 0.25rem;">${icon}</span>`,
+              );
+            }
           }
-        } catch (e) {
-          console.error("Failed to fetch dashboard data:", e);
-        }
-      };
+          return newText;
+        };
 
-      const renderGlobalStatus = (isOperational) => {
-        const container = document.getElementById("global-status-indicator");
-        const dot = document.getElementById("global-status-dot");
-        const text = document.getElementById("global-status-text");
+        // Real-time Data Fetching
+        const fetchDashboardData = async () => {
+          try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
 
-        if (!container || !dot || !text) return;
+            if (data) {
+              renderGlobalStatus(data.all_systems_go);
+              if (data.projects) renderProjects(data.projects);
+              if (data.systems) renderSystems(data.systems);
+              if (data.agents) renderAgents(data.agents);
+              if (data.activities) renderActivity(data.activities);
+            }
+          } catch (e) {
+            console.error("Failed to fetch dashboard data:", e);
+          }
+        };
 
-        if (isOperational) {
-          container.className = "status status-success pulse";
-          dot.style.background = "var(--accent-success)";
-          text.textContent = "All Systems Operational";
-        } else {
-          container.className = "status status-error pulse";
-          dot.style.background = "var(--accent-error)";
-          text.textContent = "System Critical";
-        }
-      };
+        const renderGlobalStatus = (isOperational) => {
+          const container = document.getElementById("global-status-indicator");
+          const dot = document.getElementById("global-status-dot");
+          const text = document.getElementById("global-status-text");
 
-      const renderProjects = (projects) => {
-        const grid = document.getElementById("projects-grid");
-        if (!grid) return;
+          if (!container || !dot || !text) return;
 
-        if (projects.length === 0) {
-          grid.innerHTML = '<div class="card"><p>No active projects.</p></div>';
-          return;
-        }
+          if (isOperational) {
+            container.className = "status status-success pulse";
+            dot.style.background = "var(--accent-success)";
+            text.textContent = "All Systems Operational";
+          } else {
+            container.className = "status status-error pulse";
+            dot.style.background = "var(--accent-error)";
+            text.textContent = "System Critical";
+          }
+        };
 
-        grid.innerHTML = projects
-          .map(
-            (p) => `
+        const renderProjects = (projects) => {
+          const grid = document.getElementById("projects-grid");
+          if (!grid) return;
+
+          if (projects.length === 0) {
+            grid.innerHTML =
+              '<div class="card"><p>No active projects.</p></div>';
+            return;
+          }
+
+          grid.innerHTML = projects
+            .map(
+              (p) => `
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-              <h3 style="font-size: 1.25rem; margin: 0; color: var(--accent-primary);">${p.name}</h3>
-              <span class="status status-info">${p.status}</span>
+                ${replaceEmojiWithIcon(p.name)}
+              </h3>
+              <span class="status ${p.status.toLowerCase() === "completed" ? "status-success" : "status-info"}">${p.status}</span>
             </div>
             <p style="margin-bottom: 1rem;">${p.description}</p>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -289,27 +569,29 @@ const currentTime = new Date().toLocaleString("en-US", {
             </div>
           </div>
         `,
-          )
-          .join("");
-      };
+            )
+            .join("");
+        };
 
-      const renderSystems = (systems) => {
-        const grid = document.getElementById("core-services-grid");
-        if (!grid) return;
+        const renderSystems = (systems) => {
+          const grid = document.getElementById("core-services-grid");
+          if (!grid) return;
 
-        grid.innerHTML = systems
-          .map((system, index) => {
-            const color =
-              system.status === "operational"
-                ? "success"
-                : system.status === "degraded"
-                  ? "warning"
-                  : "error";
+          grid.innerHTML = systems
+            .map((system, index) => {
+              const color =
+                system.status === "operational"
+                  ? "success"
+                  : system.status === "degraded"
+                    ? "warning"
+                    : "error";
 
-            return `
+              return `
             <div class="card" style="animation-delay: ${index * 0.1}s;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <h3 style="font-size: 1.125rem; margin: 0;">${system.name}</h3>
+                <h3 style="font-size: 1.125rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                  ${replaceEmojiWithIcon(system.name)}
+                </h3>
                 <span class="status status-${color}" style="font-size: 0.75rem; padding: 0.25rem 0.625rem;">
                   ${system.status}
                 </span>
@@ -322,87 +604,274 @@ const currentTime = new Date().toLocaleString("en-US", {
               </div>
             </div>
           `;
-          })
-          .join("");
-      };
+            })
+            .join("");
+        };
 
-      const renderActivity = (activities) => {
-        const list = document.getElementById("recent-activity-list");
-        if (!list) return;
+        const renderAgents = (agents) => {
+          const grid = document.getElementById("agents-grid");
+          if (!grid) return;
 
-        // Take top 7
-        const recent = activities.slice(0, 7);
+          // Define agents to show (ChatGPT is live, Claude is placeholder)
+          const agentList = [
+            { id: "ChatGPT", name: "ChatGPT", icon: "🧠" },
+            { id: "Claude", name: "Claude", icon: "🧠" },
+          ];
 
-        list.innerHTML = recent
-          .map(
-            (activity, index) => `
-              <div style="display: flex; gap: 1rem; padding-bottom: 1rem; ${index < recent.length - 1 ? "border-bottom: 1px solid var(--border-primary);" : ""}">
-                <div style="min-width: 60px; color: var(--text-tertiary); font-size: 0.875rem; font-family: monospace;">
-                  ${activity.time}
+          grid.innerHTML = agentList
+            .map((agent, index) => {
+              const state = agents[agent.id] || { status: "not connected" };
+              const status = state.status.toLowerCase();
+
+              let color = "secondary";
+              let label = "Not Connected";
+              let pulse = "";
+
+              if (status === "busy") {
+                color = "info";
+                label = "Busy";
+                pulse = "pulse";
+              } else if (status === "idle" || status === "ready") {
+                color = "success";
+                label = "Ready";
+              } else if (status === "assistance required") {
+                color = "error";
+                label = "CALL COMMANDER";
+                pulse = "pulse";
+              }
+
+              return `
+            <div class="card" style="animation-delay: ${index * 0.15}s; border-left: 4px solid var(--accent-${color}); ${status === "assistance required" ? "box-shadow: 0 0 15px var(--accent-error); border: 2px solid var(--accent-error);" : ""}">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1.125rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                  ${replaceEmojiWithIcon(agent.icon)}
+                  ${agent.name}
+                </h3>
+                <span class="status status-${color} ${pulse}" style="font-size: 0.7rem; padding: 0.2rem 0.6rem; font-weight: bold;">
+                  ${label}
+                </span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                ${
+                  status === "busy"
+                    ? `<div style="display: flex; gap: 0.4rem; align-items: center;">
+                       <span class="pulse" style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-info);"></span>
+                       <span>Thinking...</span>
+                     </div>`
+                    : status === "assistance required"
+                      ? `<div style="display: flex; gap: 0.4rem; align-items: center; color: var(--accent-error); font-weight: bold;">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                       <span>MANUAL INTERVENTION NEEDED</span>
+                     </div>`
+                      : `<div style="display: flex; gap: 0.4rem; align-items: center;">
+                       <span style="width: 8px; height: 8px; border-radius: 50%; background: ${status === "not connected" ? "var(--text-tertiary)" : "var(--accent-success)"};"></span>
+                       <span>${status === "not connected" ? "Inactive" : "Standing By"}</span>
+                     </div>`
+                }
+              </div>
+            </div>
+          `;
+            })
+            .join("");
+        };
+
+        let activityMaxLines = 3;
+        window.toggleActivityLines = (btn) => {
+          const p = btn.previousElementSibling;
+          if (p.style.webkitLineClamp === "none") {
+            p.style.webkitLineClamp = "3";
+            btn.textContent = "Show more";
+          } else {
+            p.style.webkitLineClamp = "none";
+            btn.textContent = "Show less";
+          }
+        };
+
+        const formatRelativeTime = (timeStr) => {
+          if (!timeStr) return "Unknown";
+
+          // Handle HH:mm format (today) vs 20YY-MM-DD HH:mm
+          let date;
+          if (timeStr.includes("-")) {
+            date = new Date(timeStr);
+          } else {
+            // Assume today if only HH:mm
+            const [h, m] = timeStr.split(":");
+            date = new Date();
+            date.setHours(parseInt(h), parseInt(m), 0, 0);
+          }
+
+          const now = new Date();
+          const diffMs = now - date;
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 0)
+            return `Today ${timeStr.includes(":") ? timeStr.split(" ").pop() : ""}`;
+          if (diffDays === 1) return `Yesterday`;
+          if (diffDays < 7) return `${diffDays} days ago`;
+          return date.toLocaleDateString();
+        };
+
+        let activityExpanded = false; // Default to collapsed (3 items)
+
+        const renderActivity = (activities) => {
+          const list = document.getElementById("recent-activity-list");
+          if (!list) return;
+
+          // Toggle between 3 and 10 items
+          const count = activityExpanded ? 10 : 3;
+          const recent = activities.slice(0, count);
+
+          list.innerHTML = recent
+            .map((activity, index) => {
+              const isFinished =
+                activity.action.toLowerCase().includes("finished") ||
+                activity.action.toLowerCase().includes("complete") ||
+                activity.action.toLowerCase().includes("ready");
+
+              return `
+              <div class="activity-item" style="display: flex; gap: 1rem; padding-bottom: 1rem; ${index < recent.length - 1 ? "border-bottom: 1px solid var(--border-primary);" : ""}">
+                <div style="min-width: 80px; color: var(--text-tertiary); font-size: 0.75rem; font-family: monospace; white-space: nowrap;">
+                  ${formatRelativeTime(activity.time)}
                 </div>
                 <div style="flex: 1;">
                   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                    <span style="font-weight: 600; color: var(--accent-primary);">${activity.agent}</span>
+                    <span style="font-weight: 600; color: var(--accent-primary); display: flex; align-items: center; gap: 0.5rem;">
+                      ${replaceEmojiWithIcon(activity.agent)}
+                    </span>
                     <span class="status status-${activity.type}" style="font-size: 0.7rem; padding: 0.125rem 0.5rem;">
                       ${activity.type}
                     </span>
+                    ${isFinished ? '<span class="status status-success" style="font-size: 0.7rem; padding: 0.125rem 0.5rem; animation: pulse 2s infinite;">Ready!</span>' : ""}
                   </div>
-                  <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${activity.action}</p>
+                  <p 
+                    style="margin: 0; color: var(--text-secondary); font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;"
+                  >${activity.action}</p>
                 </div>
               </div>
-        `,
-          )
-          .join("");
-      };
+            `;
+            })
+            .join("");
 
-      // Update time
-      setInterval(() => {
-        const timeElement = document.querySelector("header p");
-        if (timeElement) {
-          const now = new Date().toLocaleString("en-US", {
-            timeZone: "Asia/Seoul",
-            dateStyle: "full",
-            timeStyle: "short",
-          });
-          timeElement.textContent = now;
-        }
-      }, 1000);
-
-      // Initial Fetch & Poll
-      fetchDashboardData();
-      setInterval(fetchDashboardData, 3000);
-    </script>
-    <script>
-      // Theme toggle handler
-      const toggleBtn = document.getElementById("theme-toggle");
-      if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-          const root = document.documentElement;
-          const current = root.getAttribute("data-theme") || "dark";
-          const newTheme = current === "dark" ? "light" : "dark";
-          root.setAttribute("data-theme", newTheme);
-          localStorage.setItem("theme", newTheme);
-          // swap icons
-          const sun = document.querySelector(".icon-sun");
-          const moon = document.querySelector(".icon-moon");
-          if (newTheme === "light") {
-            sun.style.display = "inline";
-            moon.style.display = "none";
-          } else {
-            sun.style.display = "none";
-            moon.style.display = "inline";
+          // Update toggle button text/icon if needed
+          const btn = document.getElementById("toggle-activity-btn");
+          if (btn) {
+            btn.innerHTML = activityExpanded
+              ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg> Show Less`
+              : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg> Show More (${activities.length})`;
           }
-        });
+        };
 
-        // Sync icons on load
-        const root = document.documentElement;
-        if (root.getAttribute("data-theme") === "dark") {
-          const sun = document.querySelector(".icon-sun");
-          const moon = document.querySelector(".icon-moon");
-          if (sun) sun.style.display = "none";
-          if (moon) moon.style.display = "inline";
+        // Toggle Activity Expansion
+        const toggleActivityBtn = document.getElementById(
+          "toggle-activity-btn",
+        );
+        if (toggleActivityBtn) {
+          toggleActivityBtn.addEventListener("click", () => {
+            activityExpanded = !activityExpanded;
+            fetchDashboardData(); // Re-render with new count
+          });
         }
-      }
-    </script>
+
+        // Update time
+        setInterval(() => {
+          const timeElement = document.querySelector("header p");
+          if (timeElement) {
+            const now = new Date().toLocaleString("en-US", {
+              timeZone: "Asia/Seoul",
+              dateStyle: "full",
+              timeStyle: "short",
+            });
+            timeElement.textContent = now;
+          }
+        }, 1000);
+
+        // Initial Fetch & Poll
+        fetchDashboardData();
+      </script>
+      <script is:inline>
+        // Theme toggle handler
+        const toggleBtn = document.getElementById("theme-toggle");
+        if (toggleBtn) {
+          toggleBtn.addEventListener("click", () => {
+            const root = document.documentElement;
+            const current = root.getAttribute("data-theme") || "dark";
+            const newTheme = current === "dark" ? "light" : "dark";
+            root.setAttribute("data-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+            // swap icons
+            const sun = document.querySelector(".icon-sun");
+            const moon = document.querySelector(".icon-moon");
+            if (newTheme === "light") {
+              sun.style.display = "inline";
+              moon.style.display = "none";
+            } else {
+              sun.style.display = "none";
+              moon.style.display = "inline";
+            }
+          });
+
+          // Sync icons on load
+          const root = document.documentElement;
+          if (root.getAttribute("data-theme") === "dark") {
+            const sun = document.querySelector(".icon-sun");
+            const moon = document.querySelector(".icon-moon");
+            if (sun) sun.style.display = "none";
+            if (moon) moon.style.display = "inline";
+          }
+        }
+
+        // Shutdown handler
+        const shutdownBtn = document.getElementById("shutdown-btn");
+        if (shutdownBtn) {
+          shutdownBtn.addEventListener("click", async () => {
+            if (
+              !confirm(
+                "⚠️ MISSION ABORT: Are you sure you want to shut down ALL backend services and the server?",
+              )
+            ) {
+              return;
+            }
+
+            shutdownBtn.disabled = true;
+            shutdownBtn.style.opacity = "0.5";
+            shutdownBtn.style.cursor = "wait";
+
+            try {
+              const res = await fetch("http://localhost:8000/api/shutdown", {
+                method: "POST",
+              });
+
+              if (res.ok) {
+                alert(
+                  "🚀 Shutdown sequence initiated. Frontend will disconnect shortly.",
+                );
+                // Change status to disconnected
+                const statusText =
+                  document.getElementById("global-status-text");
+                const statusDot = document.getElementById("global-status-dot");
+                const statusContainer = document.getElementById(
+                  "global-status-indicator",
+                );
+
+                if (statusText) statusText.textContent = "System Offline";
+                if (statusDot)
+                  statusDot.style.background = "var(--text-tertiary)";
+                if (statusContainer) statusContainer.className = "status";
+              } else {
+                alert("❌ Shutdown failed: Server responded with error.");
+                shutdownBtn.disabled = false;
+                shutdownBtn.style.opacity = "1";
+                shutdownBtn.style.cursor = "pointer";
+              }
+            } catch (e) {
+              // Expected if server shuts down fast
+              alert("🚀 Shutdown command sent. System is going offline.");
+              location.reload();
+            }
+          });
+        }
+      </script>
+    </div>
   </body>
 </html>

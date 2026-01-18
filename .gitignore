@@ -32,7 +32,13 @@ backend/mission_state.json
 backend/dashboard_data.json
 backend/conversation_log.json
 backend/browser_data/
-
+backend/isolated_data/
+backend/processed_ids.txt
+backend/messages_debug.txt
+backend/bridge.log
+backend/sentry.log
+backend/server.log
+backend/.sentry_state.json
 
 # VS Code
 .vscode/
@@ -42,3 +48,15 @@ backend/browser_data/
 Thumbs.db
 *.swp
 *.swo
+
+# Rust
+target/
+**/target/
+debug/
+release/
+**/*.rs.bk
+Cargo.lock
+
+# Chrome/Edge Browser Data (Do not commit browser profiles)
+backend/isolated_data/chatgpt/
+backend/isolated_data/edge/

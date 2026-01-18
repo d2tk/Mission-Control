@@ -1,0 +1,19 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.8"
+chromiumoxide = { version = "0.8.0", features = ["tokio", "tokio-runtime"] }
+chrono = "0.4.43"
+fs2 = "0.4.3"
+reqwest = { version = "0.13.1", features = ["json"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sysinfo = "0.37.2"
+tempfile = "3.24.0"
+tokio = { version = "1.49.0", features = ["full"] }
+tower-http = { version = "0.6.8", features = ["cors"] }
+futures = "0.3"
+walkdir = "2.5.0"

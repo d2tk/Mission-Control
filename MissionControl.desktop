@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Mission Control (OPB)
+Comment=Launch Project Opb Mission Control
+Exec=ghostty -e /home/a2/Desktop/gem/opb/start_mission.sh
+Icon=utilities-terminal
+Terminal=false
+StartupNotify=true
+Categories=Development;
+Path=/home/a2/Desktop/gem/opb

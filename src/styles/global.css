@@ -88,12 +88,18 @@
   --border-secondary: var(--flexoki-700);
 
   /* Accents - darker for contrast on light bg */
-  --accent-primary: #24837B; /* Cyan */
-  --accent-secondary: #205EA6; /* Blue */
-  --accent-success: #66800B; /* Green */
-  --accent-warning: #AD8301; /* Yellow */
-  --accent-error: #AF3029; /* Red */
-  --accent-info: #5E409D; /* Purple */
+  --accent-primary: #24837B;
+  /* Cyan */
+  --accent-secondary: #205EA6;
+  /* Blue */
+  --accent-success: #66800B;
+  /* Green */
+  --accent-warning: #AD8301;
+  /* Yellow */
+  --accent-error: #AF3029;
+  /* Red */
+  --accent-info: #5E409D;
+  /* Purple */
 }
 
 /* Reset and base styles */
