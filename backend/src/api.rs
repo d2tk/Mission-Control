@@ -16,6 +16,29 @@ const DASHBOARD_FILE: &str = "dashboard_data.json";
 const PROJECTS_FILE: &str = "projects.json";
 const DOCS_FILE: &str = "docs.json";
 
+fn is_running(name: &str) -> bool {
+    use std::process::Command;
+    Command::new("pgrep")
+        .arg("-f")
+        .arg(name)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+fn is_podman_running(container: &str) -> bool {
+    use std::process::Command;
+    Command::new("podman")
+        .args(&["ps", "--filter", &format!("name={}", container), "--format", "{{.Names}}"])
+        .output()
+        .map(|o| {
+            let output = String::from_utf8_lossy(&o.stdout);
+            output.trim() == container
+        })
+        .unwrap_or(false)
+}
+
+
 pub async fn get_messages() -> impl IntoResponse {
     match read_json::<Vec<Message>>(LOG_FILE) {
         Ok(messages) => (StatusCode::OK, Json(messages)).into_response(),
@@ -75,16 +98,6 @@ pub async fn post_state(Json(updates): Json<serde_json::Value>) -> impl IntoResp
 }
 
 pub async fn get_dashboard() -> impl IntoResponse {
-    use std::process::Command;
-
-    fn is_running(name: &str) -> bool {
-        Command::new("pgrep")
-            .arg("-f")
-            .arg(name)
-            .output()
-            .map(|o| o.status.success())
-            .unwrap_or(false)
-    }
 
     let mut data: DashboardData = read_json(DASHBOARD_FILE).unwrap_or_default();
     data.projects = read_json::<Vec<crate::models::Project>>(PROJECTS_FILE).unwrap_or_default();
@@ -98,6 +111,7 @@ pub async fn get_dashboard() -> impl IntoResponse {
     let bridge_status = is_running("bridge") || is_running("browser_bridge.py");
     let sentry_status = is_running("sentry") || is_running("sentry.py");
     let server_status = true; // Rust server is running
+    let mapper_status = is_podman_running("smartmapper");
 
     // --- Disk Info ---
     data.disk = get_disk_usage("/home/a2/Desktop/gem");
@@ -154,6 +168,16 @@ pub async fn get_dashboard() -> impl IntoResponse {
             status: if sentry_status { "operational" } else { "down" }.into(),
             category: "Monitoring".into(),
             description: Some("Resource health and status monitoring".into())
+        },
+        SystemStatus {
+            name: "🗺️ Mapper (Podman)".into(),
+            status: if mapper_status { "operational" } else { "down" }.into(),
+            category: "Utilities".into(),
+            description: Some(if mapper_status { 
+                "Smart dividend mapper • Port 9000/tcp" 
+            } else { 
+                "Container stopped" 
+            }.into())
         },
     ];
     data.all_systems_go = bridge_status && sentry_status && server_status;
@@ -253,4 +277,57 @@ pub async fn post_shutdown() -> impl IntoResponse {
     });
     
     (StatusCode::OK, Json(serde_json::json!({"status": "shutdown_initiated"}))).into_response()
+}
+
+// --- Podman API ---
+
+#[derive(serde::Deserialize)]
+pub struct PodmanAction {
+    container: String,
+}
+
+pub async fn post_podman(Json(params): Json<PodmanAction>) -> impl IntoResponse {
+    use std::process::Command;
+
+    println!("🐳 Podman action request for: {}", params.container);
+
+    let is_running = is_podman_running("smartmapper");
+    let action = if is_running { "stop" } else { "start" };
+
+    println!("🐳 Container smartmapper is currently {}, performing: {}", if is_running { "running" } else { "stopped" }, action);
+
+    let output = if action == "stop" {
+        Command::new("podman")
+            .args(&["stop", "smartmapper"])
+            .current_dir("/home/a2/mybook/smart_mapper")
+            .output()
+    } else {
+        Command::new("podman")
+            .args(&["start", "smartmapper"])
+            .current_dir("/home/a2/mybook/smart_mapper")
+            .output()
+    };
+
+    match output {
+        Ok(o) => {
+            if o.status.success() {
+                (StatusCode::OK, Json(serde_json::json!({
+                    "status": "ok",
+                    "action": action,
+                    "container": params.container
+                }))).into_response()
+
+            } else {
+                let stderr = String::from_utf8_lossy(&o.stderr);
+                (StatusCode::INTERNAL_SERVER_ERROR, 
+                    Json(serde_json::json!({"status": "error", "message": stderr.to_string()}))
+                ).into_response()
+            }
+        }
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, 
+                Json(serde_json::json!({"status": "error", "message": e.to_string()}))
+            ).into_response()
+        }
+    }
 }

@@ -190,7 +190,7 @@ const currentTime = new Date().toLocaleString("en-US", {
                   style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-primary);"
                 />
                 <button type="submit" class="btn btn-primary"
-                  >✚ Add Project</button
+                  >Add Project</button
                 >
               </form>
             </div>
@@ -215,10 +215,10 @@ const currentTime = new Date().toLocaleString("en-US", {
             </div>
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
               <button class="btn btn-primary" id="save-btn"
-                >💾 Force Save to Server</button
+                >Force Save to Server</button
               >
               <button class="btn btn-secondary" id="reset-btn"
-                >🔄 Clear Projects</button
+                >Clear Projects</button
               >
             </div>
           </div>
@@ -237,29 +237,7 @@ const currentTime = new Date().toLocaleString("en-US", {
 
       const API_URL = "http://localhost:8000/api/dashboard";
 
-      const ICON_MAP = {
-        "📡": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>`,
-        "🚀": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.5-1 1-4c2 0 3 0 4 1z"/><path d="M12 15v5s1-.5 4-1c0-1 0-2-1-4z"/><path d="M15 9l-1 1"/></svg>`,
-        "⚙️": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>`,
-        "🛡️": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>`,
-        "🌉": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bridge"><path d="M3 21v-4c0-2 1-3 3-3h12c2 0 3 1 3 3v4"/><path d="M3 7h18"/><path d="M6 7v7"/><path d="M18 7v7"/><path d="M12 7v7"/></svg>`,
-        "🖥️": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-monitor"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>`,
-        "🧠": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brain"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 1 1 .34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 3.76-1.04A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 1 0-.34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-3.76-1.04A2.5 2.5 0 0 0 14.5 2Z"/></svg>`,
-        "🎛️": `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-control"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 12h6"/><path d="M15 12h6"/><path d="M12 3v6"/><path d="M12 15v6"/></svg>`,
-      };
-
-      const replaceEmojiWithIcon = (text) => {
-        let newText = text || "";
-        for (const [emoji, icon] of Object.entries(ICON_MAP)) {
-          if (newText.includes(emoji)) {
-            newText = newText.replace(
-              emoji,
-              `<span class="icon-wrapper" style="display: inline-flex; align-items: center; justify-content: center; width: 1.2em; height: 1.2em; vertical-align: middle; margin-right: 0.25rem;">${icon}</span>`,
-            );
-          }
-        }
-        return newText;
-      };
+      const replaceEmojiWithIcon = (text) => text;
 
       // Fetch Initial Data
       async function init() {

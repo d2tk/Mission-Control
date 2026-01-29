@@ -23,6 +23,8 @@ pub async fn run_server() {
         .route("/api/docs/content", get(handle_docs::get_docs_content))
         .route("/api/disk/cleanup", get(api::get_cleanup_candidates).post(api::post_cleanup))
         .route("/api/shutdown", post(api::post_shutdown))
+        .route("/api/logs/fragment", post(handle_docs::fragment_logs))
+        .route("/api/podman", post(api::post_podman))
         .layer(CorsLayer::permissive());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));

@@ -53,6 +53,8 @@ pub struct Project {
 pub struct DocInfo {
     pub path: String,
     pub added: String,
+    pub category: Option<String>,
+    pub is_fragment: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

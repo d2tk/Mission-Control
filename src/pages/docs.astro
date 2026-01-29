@@ -199,6 +199,32 @@ const currentTime = new Date().toLocaleString("en-US", {
                                     id="register-doc-btn"
                                     class="btn btn-primary">Register</button
                                 >
+                                <button
+                                    id="fragment-logs-btn"
+                                    class="btn btn-secondary"
+                                    style="border-color: var(--accent-secondary); color: var(--accent-secondary);"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        style="margin-right: 0.25rem;"
+                                        ><path d="M3 6h18"></path><path
+                                            d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+                                        ></path><path
+                                            d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+                                        ></path><path d="m14 12-4 4"
+                                        ></path><path d="m10 12 4 4"
+                                        ></path></svg
+                                    >
+                                    Fragment Logs
+                                </button>
                             </div>
                         </div>
 
@@ -288,18 +314,34 @@ const currentTime = new Date().toLocaleString("en-US", {
                     return;
                 }
                 docList.innerHTML = docs
-                    .map(
-                        (doc) => `
-              <div style="display: flex; gap: 0.25rem; align-items: center; margin-bottom: 0.5rem;">
-                <button class="btn btn-secondary" onclick="viewDoc('${doc.path}')" style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; padding: 0.4rem 0.6rem;">
-                    📄 ${doc.path.split("/").pop()}
+                    .map((doc) => {
+                        const isFragment = doc.is_fragment === true;
+                        const category = doc.category || "";
+                        let icon = "📄";
+                        let color = "inherit";
+
+                        if (category.includes("GPT")) {
+                            icon = "🤖";
+                            color = "#74aa9c";
+                        } else if (category.includes("Claude")) {
+                            icon = "🧠";
+                            color = "#d97757";
+                        } else if (category.includes("Qwen")) {
+                            icon = "🐉";
+                            color = "#4f46e5";
+                        }
+
+                        return `
+              <div style="display: flex; gap: 0.25rem; align-items: center; margin-bottom: 0.5rem; position: relative;">
+                <button class="btn btn-secondary" onclick="viewDoc('${doc.path}')" style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; padding: 0.4rem 0.6rem; border-left: 3px solid ${isFragment ? color : "transparent"};">
+                    ${icon} ${doc.path.split("/").pop()}
                 </button>
-                <button onclick="deleteDoc('${doc.path}')" style="background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.color='var(--accent-error)'; this.style.background='var(--bg-tertiary)'" onmouseout="this.style.color='var(--text-tertiary)'; this.style.background='none'">
+                <button onclick="deleteDoc('${doc.path}', ${isFragment})" style="background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.color='var(--accent-error)'; this.style.background='var(--bg-tertiary)'" onmouseout="this.style.color='var(--text-tertiary)'; this.style.background='none'">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               </div>
-          `,
-                    )
+          `;
+                    })
                     .join("");
             };
 
@@ -340,13 +382,13 @@ const currentTime = new Date().toLocaleString("en-US", {
             }
 
             // Delete Doc
-            window.deleteDoc = async (path) => {
-                if (
-                    !confirm(
-                        "Are you sure you want to unregister this document?",
-                    )
-                )
-                    return;
+            window.deleteDoc = async (path, isFragment) => {
+                const message = isFragment
+                    ? "Careful: This is a LOG FRAGMENT. Deleting it will permanently remove the file from disk after unregistering it. Continue?"
+                    : "Are you sure you want to unregister this document?";
+
+                if (!confirm(message)) return;
+
                 try {
                     const res = await fetch(
                         `http://localhost:8000/api/docs?path=${encodeURIComponent(path)}`,
@@ -397,7 +439,46 @@ const currentTime = new Date().toLocaleString("en-US", {
                 });
             }
 
+            // Fragment Logs
+            const fragmentBtn = document.getElementById("fragment-logs-btn");
+            if (fragmentBtn) {
+                fragmentBtn.addEventListener("click", async () => {
+                    const btn = fragmentBtn;
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = "Processing...";
+
+                    try {
+                        const res = await fetch(
+                            "http://localhost:8000/api/logs/fragment",
+                            { method: "POST" },
+                        );
+                        const data = await res.json();
+
+                        if (data.status === "ok") {
+                            fetchDocs();
+                            alert("Logs fragmented and archived successfully.");
+                        } else if (data.status === "no_logs") {
+                            alert("No log messages found to fragment.");
+                        } else {
+                            alert("Fragmentation failed");
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert("Error during fragmentation");
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                });
+            }
+
             // Initial load
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialPath = urlParams.get("path");
+            if (initialPath) {
+                viewDoc(initialPath);
+            }
             fetchDocs();
 
             // --- Drag and Drop Support ---

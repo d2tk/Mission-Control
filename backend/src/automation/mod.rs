@@ -5,21 +5,21 @@ pub mod agents;
 use tokio::sync::mpsc;
 use crate::automation::core::session::SessionPool;
 use crate::automation::state::{StateActor, StateClient};
-use crate::automation::agents::{AgentContext, execute_chatgpt_task, execute_claude_task};
+use crate::automation::agents::{AgentContext, execute_chatgpt_task, execute_claude_task, execute_ollama_task};
 use crate::models::Message;
 use chromiumoxide::BrowserConfig;
 use std::path::PathBuf;
 use chromiumoxide::browser::HeadlessMode;
 use tokio::time::{sleep, Duration};
 use reqwest::Client;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use tokio::sync::oneshot;
 use crate::automation::core::BrowserCommand;
 
 const API_BASE: &str = "http://localhost:8000/api";
 const POLL_INTERVAL: u64 = 2;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct MessageEnvelope {
     assigned_to: String,
     input: String,
@@ -195,7 +195,26 @@ impl BridgeManager {
             let text = msg.message.trim();
             let lower_text = text.to_lowercase();
 
-            if (lower_text.contains("@chatgpt") || lower_text.contains("!gpt")) && msg.sender != "ChatGPT" {
+            // ACP Protocol: Try parsing as JSON envelope first
+            if let Ok(envelope) = serde_json::from_str::<MessageEnvelope>(text) {
+                println!("[Bridge] JSON Envelope detected for {}", envelope.assigned_to);
+                if envelope.assigned_to == "ChatGPT" && msg.sender != "ChatGPT" {
+                    self.dispatch_task("ChatGPT", &envelope.input).await?;
+                    self.state.save_processed(msg_id).await;
+                    continue;
+                } else if envelope.assigned_to == "Claude" && msg.sender != "Claude" {
+                    self.dispatch_task("Claude", &envelope.input).await?;
+                    self.state.save_processed(msg_id).await;
+                    continue;
+                } else if envelope.assigned_to == "Ollama" && msg.sender != "Ollama" {
+                    self.dispatch_task("Ollama", &envelope.input).await?;
+                    self.state.save_processed(msg_id).await;
+                    continue;
+                }
+            }
+
+            // Legacy Protocol: Text triggers
+            if (lower_text.contains("@chatgpt") || lower_text.contains("@gpt") || lower_text.contains("!gpt")) && msg.sender != "ChatGPT" {
                 let cleaned = if lower_text.starts_with("!gpt") {
                     self.handle_gpt_command(text).await
                 } else {
@@ -207,6 +226,10 @@ impl BridgeManager {
                 let cleaned = self.strip_routing_tags(text);
                 self.dispatch_task("Claude", &cleaned).await?;
                 self.state.save_processed(msg_id).await;
+            } else if (lower_text.contains("@ollama") || lower_text.contains("@qwen") || lower_text.contains("!ollama")) && msg.sender != "Ollama" {
+                let cleaned = self.strip_routing_tags(text);
+                self.dispatch_task("Ollama", &cleaned).await?;
+                self.state.save_processed(msg_id).await;
             }
         }
         Ok(())
@@ -217,15 +240,19 @@ impl BridgeManager {
             return Ok(());
         }
 
-        // Phase 7: Strict Browser Health Check before dispatch
-        if !self.verify_browser_health(agent_name).await {
-            println!("[Bridge] Attempting browser recovery for {}...", agent_name);
-            // Recovery is handled by verify_browser_health purging the session
-            // The next get_or_create will launch a fresh one.
-        }
+        // Context preparation
+        let browser_tx = if agent_name == "Ollama" {
+            let (tx, _rx) = mpsc::channel(1);
+            tx
+        } else {
+            // Phase 7: Strict Browser Health Check before dispatch (Only for browser agents)
+            if !self.verify_browser_health(agent_name).await {
+                println!("[Bridge] Attempting browser recovery for {}...", agent_name);
+            }
+            let config = self.create_default_config(agent_name);
+            self.session_pool.get_or_create(agent_name, || config.clone()).await?
+        };
 
-        let config = self.create_default_config(agent_name);
-        let browser_tx = self.session_pool.get_or_create(agent_name, || config.clone()).await?;
         let ctx = AgentContext {
             browser_tx,
             state: self.state.clone(),
@@ -242,6 +269,10 @@ impl BridgeManager {
         } else if agent_name == "Claude" {
             tokio::spawn(async move {
                 let _ = execute_claude_task(&ctx, &prompt_owned).await;
+            });
+        } else if agent_name == "Ollama" {
+            tokio::spawn(async move {
+                let _ = execute_ollama_task(&ctx, &prompt_owned).await;
             });
         }
 

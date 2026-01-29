@@ -89,7 +89,7 @@ async fn wait_for_settle(page: &Page) -> AgentResult<()> {
     page.evaluate(r#"
         window.__waitForAssistant = () => new Promise(resolve => {
             let lastChange = Date.now();
-            const maxWait = 30000; // 30s timeout
+            const maxWait = 60000; // 60s timeout (Increased as per Commander's request)
             const start = Date.now();
             const obs = new MutationObserver(() => { lastChange = Date.now(); });
             obs.observe(document.body, { childList: true, subtree: true, characterData: true });
